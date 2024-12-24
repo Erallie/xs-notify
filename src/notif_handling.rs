@@ -74,11 +74,15 @@ pub async fn notif_to_message(
         .map(|element| element.Text())
         .filter_map(|el| el.ok())
         .fold(String::new(), |a, b| a + &b.to_string() + "\n");
+    let chars = content.len() as f32;
+    let lines = (chars / 50 as f32).ceil();
+    let height = (lines * 25 as f32) + 75 as f32;
+
     Ok(XSOverlayMessage {
         messageType: 1,
         index: 0,
         timeout,
-        height: 175.,
+        height,
         opacity: 1.,
         volume: 0.7,
         audioPath: "default".to_string(),
