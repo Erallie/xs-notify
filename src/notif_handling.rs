@@ -41,7 +41,7 @@ async fn read_logo(display_info: AppDisplayInfo) -> anyhow::Result<Vec<u8>> {
 
 pub async fn notif_to_message(
     notif: UserNotification,
-    timeout: f32,
+    reading_speed: f32,
 ) -> anyhow::Result<XSOverlayMessage> {
     let app_info = notif.AppInfo()?;
     let display_info = app_info.DisplayInfo()?;
@@ -77,6 +77,9 @@ pub async fn notif_to_message(
     let chars = content.len() as f32;
     let lines = (chars / 50 as f32).ceil();
     let height = (lines * 25 as f32) + 75 as f32;
+    let words = content.split(" ").count() as f32 + title.split(" ").count() as f32;
+    let first_timeout = words / reading_speed * 60 as f32;
+    let timeout = f32::max(first_timeout, 2.);
 
     Ok(XSOverlayMessage {
         messageType: 1,
@@ -98,7 +101,7 @@ pub async fn polling_notification_handler(
     listener: UserNotificationListener,
     tx: &UnboundedSender<XSOverlayMessage>,
     polling_rate: u64,
-    timeout: f32,
+    reading_speed: f32,
 ) -> Result<()> {
     let mut prev_notifs: Option<Vec<UserNotification>> = None;
     loop {
@@ -115,7 +118,7 @@ pub async fn polling_notification_handler(
                     .is_none()
             }) {
                 log::info!("handling new notification");
-                let msg = notif_to_message(notif, timeout).await;
+                let msg = notif_to_message(notif, reading_speed).await;
                 match msg {
                     Ok(msg) => tx.send(msg)?,
                     Err(e) => println!("Failed to convert notification to XSOverlay message: {e}"),
@@ -193,7 +196,8 @@ pub async fn notification_listener(
             listening_notification_handler(listener, tx, config.timeout).await
         }
         NotificationStrategy::Polling => {
-            polling_notification_handler(listener, tx, config.polling_rate, config.timeout).await
+            polling_notification_handler(listener, tx, config.polling_rate, config.reading_speed)
+                .await
         }
     }
 }
