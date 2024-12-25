@@ -8,3 +8,5 @@ notification_strategy = "polling"
 polling_rate = 250
 # The duration the notification shows up on screen
 timeout = 2
+# Your reading speed in words per minute (WPM). The timeout of each notification will be calculated based off of this.
+reading_speed = 238
