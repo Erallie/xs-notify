@@ -8,5 +8,9 @@ notification_strategy = "polling"
 polling_rate = 250
 # The duration the notification shows up on screen
 timeout = 2
-# Your reading speed in words per minute (WPM). The timeout of each notification will be calculated based off of this.
+# Your reading speed in words per minute (WPM). When dynamic_timeout is enabled, the timeout of each notification will be calculated based off of this.
 reading_speed = 238
+# When dynamic_timeout is enabled, notifications will never display for less than this many seconds.
+min_timeout = 2
+# When dynamic_timeout is enabled, notifications will never display for more than this many seconds.
+max_timeout = 180

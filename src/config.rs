@@ -28,6 +28,12 @@ pub struct NotifierConfig {
 
     #[arg(long, default_value_t = 238.)]
     pub reading_speed: f32,
+
+    #[arg(long, default_value_t = 2.)]
+    pub min_timeout: f32,
+
+    #[arg(long, default_value_t = 180.)]
+    pub max_timeout: f32,
 }
 
 impl Default for NotifierConfig {
@@ -39,6 +45,8 @@ impl Default for NotifierConfig {
             polling_rate: 250,
             timeout: 2.0,
             reading_speed: 238.,
+            min_timeout: 2.,
+            max_timeout: 180.,
         }
     }
 }
