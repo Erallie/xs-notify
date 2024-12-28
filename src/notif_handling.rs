@@ -115,7 +115,7 @@ pub async fn notif_to_message(
             .count() as f32;
     println!("Word count: {}", words);
     let first_timeout = words / reading_speed * 60 as f32;
-    let timeout = f32::max(first_timeout, 2.);
+    let timeout = f32::min((f32::max(first_timeout, min_timeout)), max_timeout);
 
     Ok(XSOverlayMessage {
         messageType: 1,
