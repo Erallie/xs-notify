@@ -107,7 +107,7 @@ pub async fn notif_to_message(
         })
         .flat_map(|chunked_lines| chunked_lines)
         .collect();
-    let height = ((lines.len() as f32) * 25 as f32) + 75 as f32;
+    let height = ((lines.len() as f32) * 20 as f32) + 80 as f32;
     let words = initial_lines
         .iter()
         .flat_map(|line| line.split_whitespace())
