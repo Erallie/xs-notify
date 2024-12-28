@@ -8,6 +8,7 @@ use tokio::{
     sync::mpsc::{unbounded_channel, UnboundedSender},
     time::sleep,
 };
+use unicode_segmentation::UnicodeSegmentation;
 use windows::{
     ApplicationModel::AppDisplayInfo,
     Foundation::{Size, TypedEventHandler},
@@ -76,11 +77,33 @@ pub async fn notif_to_message(
         .map(|element| element.Text())
         .filter_map(|el| el.ok())
         .fold(String::new(), |a, b| a + &b.to_string() + "\n");
-    let chars = content.len() as f32;
-    let lines = (chars / 50 as f32).ceil();
-    let height = (lines * 25 as f32) + 75 as f32;
-    let words = content
-        .lines()
+    let initial_lines: Vec<&str> = content.lines().collect();
+    /* let mut lines: Vec<String> = Vec::new();
+    initial_lines.for_each(|line| {
+        let mut chunks: Vec<String> = line
+            .graphemes(true)
+            .collect::<Vec<_>>()
+            .chunks(50)
+            .map(|chunk| chunk.join(""))
+            .collect();
+        lines.append(&mut chunks);
+    }); */
+    // Create a new vector to hold the processed lines
+    let lines: Vec<String> = initial_lines
+        .iter()
+        .map(|line| {
+            // Process each line into chunks of 50 graphemes
+            line.graphemes(true)
+                .collect::<Vec<_>>()
+                .chunks(50)
+                .map(|chunk| chunk.join(""))
+                .collect::<Vec<String>>()
+        })
+        .flat_map(|chunked_lines| chunked_lines)
+        .collect();
+    let height = ((lines.len() as f32) * 25 as f32) + 75 as f32;
+    let words = initial_lines
+        .iter()
         .flat_map(|line| line.split_whitespace())
         .count() as f32
         + title

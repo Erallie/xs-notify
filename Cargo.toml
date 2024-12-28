@@ -28,3 +28,4 @@ windows = { version = "0.43.0", features = [
   "Storage_Streams",
   "Graphics_Imaging",
 ] }
+unicode-segmentation = "1.9"
