@@ -13,4 +13,6 @@ reading_speed = 238
 # When dynamic_timeout is enabled, notifications will never display for less than this many seconds.
 min_timeout = 2
 # When dynamic_timeout is enabled, notifications will never display for more than this many seconds.
-max_timeout = 180
+max_timeout = 120
+# The maximum number of characters that will be displayed in a notification.
+max_characters = 400

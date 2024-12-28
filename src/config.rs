@@ -34,6 +34,9 @@ pub struct NotifierConfig {
 
     #[arg(long, default_value_t = 180.)]
     pub max_timeout: f32,
+
+    #[arg(short, long, default_value_t = 500)]
+    pub max_characters: usize,
 }
 
 impl Default for NotifierConfig {
@@ -46,7 +49,8 @@ impl Default for NotifierConfig {
             timeout: 2.0,
             reading_speed: 238.,
             min_timeout: 2.,
-            max_timeout: 180.,
+            max_timeout: 120.,
+            max_characters: 400,
         }
     }
 }
