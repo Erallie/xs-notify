@@ -74,12 +74,15 @@ pub async fn notif_to_message(
     //         .collect::<Vec<_>>()
     // );
     let title = text_elements.GetAt(0)?.Text()?.to_string();
-    let content = text_elements
+    let content: String = text_elements
         .into_iter()
         .skip(1)
         .map(|element| element.Text())
         .filter_map(|el| el.ok())
-        .fold(String::new(), |a, b| a + &b.to_string() + "\n");
+        .fold(String::new(), |a, b| a + &b.to_string() + "\n")
+        .graphemes(true)
+        .take(max_characters)
+        .collect();
     let initial_lines: Vec<&str> = content.lines().collect();
     /* let mut lines: Vec<String> = Vec::new();
     initial_lines.for_each(|line| {
