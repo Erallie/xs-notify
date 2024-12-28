@@ -46,13 +46,15 @@ pub async fn notif_to_message(
     let app_info = notif.AppInfo()?;
     let display_info = app_info.DisplayInfo()?;
     let app_name = display_info.DisplayName()?.to_string();
-    let icon = read_logo(display_info)
-        .await
-        .map(encode)
-        .unwrap_or_else(|err| {
-            println!("{:?}", err.context("failed to read logo"));
-            "default".to_string()
-        });
+    // println!("App: {}", app_name);
+    /* let icon = read_logo(display_info)
+    .await
+    .map(encode)
+    .unwrap_or_else(|err| {
+        println!("{:?}", err.context("failed to read logo"));
+        "default".to_string()
+    }); */
+    let icon = "default".to_string();
     let toast_binding = notif
         .Notification()?
         .Visual()?
