@@ -79,7 +79,15 @@ pub async fn notif_to_message(
     let chars = content.len() as f32;
     let lines = (chars / 50 as f32).ceil();
     let height = (lines * 25 as f32) + 75 as f32;
-    let words = content.split(" ").count() as f32 + title.split(" ").count() as f32;
+    let words = content
+        .lines()
+        .flat_map(|line| line.split_whitespace())
+        .count() as f32
+        + title
+            .lines()
+            .flat_map(|line| line.split_whitespace())
+            .count() as f32;
+    println!("Word count: {}", words);
     let first_timeout = words / reading_speed * 60 as f32;
     let timeout = f32::max(first_timeout, 2.);
 
