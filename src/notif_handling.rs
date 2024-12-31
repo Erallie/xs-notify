@@ -144,7 +144,7 @@ pub async fn notif_to_message(
         audioPath: "default".to_string(),
         title,
         content,
-        useBase64Icon: true,
+        useBase64Icon: false,
         icon,
         sourceApp: app_name,
     })
