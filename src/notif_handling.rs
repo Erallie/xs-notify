@@ -58,7 +58,7 @@ pub async fn notif_to_message(
     reading_speed: f32,
     min_timeout: f32,
     max_timeout: f32,
-    max_characters: usize,
+    // max_characters: usize,
 ) -> anyhow::Result<XSOverlayMessage> {
     let app_info = notif.AppInfo()?;
     let display_info = app_info.DisplayInfo()?;
@@ -186,7 +186,7 @@ pub async fn polling_notification_handler(
     reading_speed: f32,
     min_timeout: f32,
     max_timeout: f32,
-    max_characters: usize,
+    // max_characters: usize,
 ) -> Result<()> {
     let mut prev_notifs: Option<Vec<UserNotification>> = None;
     loop {
@@ -208,7 +208,7 @@ pub async fn polling_notification_handler(
                     reading_speed,
                     min_timeout,
                     max_timeout,
-                    max_characters,
+                    // max_characters,
                 )
                 .await;
                 match msg {
@@ -228,7 +228,7 @@ pub async fn listening_notification_handler(
     reading_speed: f32,
     min_timeout: f32,
     max_timeout: f32,
-    max_characters: usize,
+    // max_characters: usize,
 ) -> Result<()> {
     let (new_notif_tx, mut new_notif_rx) = unbounded_channel::<u32>();
     listener
@@ -257,7 +257,7 @@ pub async fn listening_notification_handler(
                 reading_speed,
                 min_timeout,
                 max_timeout,
-                max_characters,
+                // max_characters,
             )
             .await;
             match msg {
@@ -301,7 +301,7 @@ pub async fn notification_listener(
                 config.reading_speed,
                 config.min_timeout,
                 config.max_timeout,
-                config.max_characters,
+                // config.max_characters,
             )
             .await
         }
@@ -313,7 +313,7 @@ pub async fn notification_listener(
                 config.reading_speed,
                 config.min_timeout,
                 config.max_timeout,
-                config.max_characters,
+                // config.max_characters,
             )
             .await
         }
