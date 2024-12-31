@@ -88,16 +88,16 @@ pub async fn notif_to_message(
     //         .collect::<Vec<_>>()
     // );
     let title = text_elements.GetAt(0)?.Text()?.to_string();
-    let content: String = text_elements
+    let mut content: String = text_elements
         .into_iter()
         .skip(1)
         .map(|element| element.Text())
         .filter_map(|el| el.ok())
-        .fold(String::new(), |a, b| a + &b.to_string() + "\n")
-        .graphemes(true)
-        .take(max_characters)
-        .collect();
-    let initial_lines: Vec<&str> = content.lines().collect();
+        .fold(String::new(), |a, b| a + &b.to_string() + "\n");
+    /*.graphemes(true)
+    .take(max_characters)
+    .collect(); */
+    let mut initial_lines: Vec<&str> = content.lines().collect();
     /* let mut lines: Vec<String> = Vec::new();
     initial_lines.for_each(|line| {
         let mut chunks: Vec<String> = line
@@ -121,7 +121,36 @@ pub async fn notif_to_message(
         })
         .flat_map(|chunked_lines| chunked_lines)
         .collect();
-    let height = ((lines.len() as f32) * 20 as f32) + 80 as f32;
+    let mut line_count = lines.len();
+    if line_count > 8 {
+        let line_to_cut = lines.get(8).unwrap();
+        if line_count == 9 {
+            // println!("Line Count = 9");
+            let initial_len = content.len();
+            content = content[..(initial_len - line_to_cut.len())].to_string();
+        } else if let Some(index) = content.rfind(line_to_cut) {
+            content = content[..index].to_string();
+        }
+
+        if let Some(index_2) = content.rfind(" ") {
+            content = content[..index_2].to_string();
+        }
+        let punctuation_marks = [
+            '.', '!', '?', ',', ';', ':', '-', '(', ')', '[', ']', '{', '}', '\"', '\'',
+        ];
+        let end = content.chars().count() - 1;
+        let mut length_to_delete = 0;
+        while punctuation_marks.contains(&content.chars().nth(end - length_to_delete).unwrap()) {
+            length_to_delete += 1;
+        }
+
+        content = content[..(content.len() - length_to_delete)].to_string() + "...";
+        line_count = 8;
+        initial_lines = content.lines().collect();
+    }
+
+    // println!("Lines: {}", line_count);
+    let height = ((line_count as f32) * 20 as f32) + 80 as f32;
     let words = initial_lines
         .iter()
         .flat_map(|line| line.split_whitespace())
