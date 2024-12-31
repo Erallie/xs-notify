@@ -38,7 +38,20 @@ async fn read_logo(display_info: AppDisplayInfo) -> anyhow::Result<Vec<u8>> {
     read_stream_to_bytes(logo_stream)
         .await
         .context("failed to read stream to bytes")
-}
+} */
+
+/* pub async fn get_icon(app_name: &str) -> String {
+    let relative_directory = "logos";
+    let mut path = PathBuf::from(relative_directory);
+    path.push(format!("{}.png", app_name));
+
+    if path.exists() {
+        println!("got here");
+        return format!("logos/{}.png", app_name);
+    } else {
+        return "default".to_string();
+    }
+} */
 
 pub async fn notif_to_message(
     notif: UserNotification,
@@ -59,6 +72,7 @@ pub async fn notif_to_message(
         "default".to_string()
     }); */
     let icon = "default".to_string();
+    // let icon = get_icon(&app_name).await;
     let toast_binding = notif
         .Notification()?
         .Visual()?
