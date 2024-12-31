@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 use anyhow::{anyhow, Context};
-use base64::encode;
+// use base64::encode;
 use log::info;
 use tokio::{
     sync::mpsc::{unbounded_channel, UnboundedSender},
@@ -10,9 +10,9 @@ use tokio::{
 };
 use unicode_segmentation::UnicodeSegmentation;
 use windows::{
-    ApplicationModel::AppDisplayInfo,
-    Foundation::{Size, TypedEventHandler},
-    Storage::Streams::{DataReader, IRandomAccessStreamWithContentType},
+    // ApplicationModel::AppDisplayInfo,
+    Foundation::TypedEventHandler, /* } */
+    /*Storage::Streams::{DataReader, IRandomAccessStreamWithContentType} */
     UI::Notifications::{
         KnownNotificationBindings,
         Management::{UserNotificationListener, UserNotificationListenerAccessStatus},
@@ -24,7 +24,7 @@ use windows::{
 use crate::config::{NotificationStrategy, NotifierConfig};
 use crate::xsoverlay::XSOverlayMessage;
 
-async fn read_logo(display_info: AppDisplayInfo) -> anyhow::Result<Vec<u8>> {
+/* async fn read_logo(display_info: AppDisplayInfo) -> anyhow::Result<Vec<u8>> {
     let logo_stream = display_info
         .GetLogo(Size {
             Width: 0.,
@@ -291,7 +291,7 @@ pub async fn notification_listener(
     }
 }
 
-async fn read_stream_to_bytes(
+/* async fn read_stream_to_bytes(
     stream: IRandomAccessStreamWithContentType,
 ) -> anyhow::Result<Vec<u8>> {
     let stream_len = stream.Size()? as usize;
@@ -302,4 +302,4 @@ async fn read_stream_to_bytes(
     reader.Close().ok();
     stream.Close().ok();
     Ok(data)
-}
+} */
