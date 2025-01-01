@@ -9,9 +9,9 @@
   IgnorableNamespaces="uap uap2 uap3 rescap desktop uap10">
   <Identity Name="XSNotify"
     Version="1.0.0.0"
-    Publisher="CN=Gozar Productions" />
+    Publisher="CN=GozarProductions" />
   <Properties>
-    <DisplayName>XSNotify</DisplayName>
+    <DisplayName>XS Notify</DisplayName>
     <PublisherDisplayName>Gozar Productions</PublisherDisplayName>
     <Logo>images\icon.png</Logo>
     <uap10:AllowExternalContent>true</uap10:AllowExternalContent>
@@ -24,7 +24,7 @@
     <Resource Language="en-us" />
   </Resources>
   <Applications>
-    <Application Id="XSNotify" Executable="XSNotify.exe"
+    <Application Id="XSNotify" Executable="xs_notify.exe"
       uap10:TrustLevel="mediumIL" uap10:RuntimeBehavior="win32App">
       <uap:VisualElements AppListEntry="none" DisplayName="Contoso PhotoStore"
         Description="Demonstrate photo app" BackgroundColor="transparent"

@@ -20,7 +20,7 @@ async fn start() -> anyhow::Result<()> {
         .filter_level(log::LevelFilter::Debug)
         .init();
     let matches = NotifierConfig::command().get_matches();
-    let project_dirs = ProjectDirs::from("dev", "Gozar Productions", "XSNotify")
+    let project_dirs = ProjectDirs::from("dev", "gozar_productions", "xs_notify")
         .ok_or_else(|| anyhow::anyhow!("project dir lookup failed"))?;
     let config_file_path = project_dirs.config_dir().join("./config.toml");
     log::info!("checking if config file exists...");

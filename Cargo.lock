@@ -3,29 +3,6 @@
 version = 4
 
 [[package]]
-name = "XSNotify"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64",
- "clap",
- "crossterm",
- "directories",
- "futures",
- "log",
- "pretty_env_logger",
- "serde",
- "serde_json",
- "tokio",
- "tokio-stream",
- "tokio-util",
- "toml 0.7.0",
- "twelf",
- "unicode-segmentation",
- "windows",
-]
-
-[[package]]
 name = "ahash"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1034,3 +1011,26 @@ name = "windows_x86_64_msvc"
 version = "0.42.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f40009d85759725a34da6d89a94e63d7bdc50a862acf0dbc7c8e488f1edcb6f5"
+
+[[package]]
+name = "xs_notify"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "clap",
+ "crossterm",
+ "directories",
+ "futures",
+ "log",
+ "pretty_env_logger",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
+ "toml 0.7.0",
+ "twelf",
+ "unicode-segmentation",
+ "windows",
+]
