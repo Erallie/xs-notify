@@ -19,7 +19,7 @@ This method assumes you have [VRCX](https://github.com/vrcx-team/VRCX) installed
 3. Go to **Settings → Advanced → App Launcher → Auto-Launch Folder**.
 4. Move the shortcut to the folder that opens.
 ## Configuration
-Settings for the notifier are stored in `%APPDATA%\gozar_productions\xs_notify\config\config.toml`. Here is some brief documentation on each option in the config:
+Settings for XS Notify are stored in `%APPDATA%\gozar_productions\xs_notify\config\config.toml`. Here is some brief documentation on each option in the config:
 ```toml
 # Port that xsoverlay is listening on
 port = 42069
