@@ -6,10 +6,10 @@
   xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   IgnorableNamespaces="uap3">
-  <Identity Name="GozarProductions.XSNotify" Version="1.0.0.0" Publisher="CN=GozarProductions"
+  <Identity Name="GozarProductions.XSNotify" Version="1.0.0.0" Publisher="CN=Gozar Productions"
     ProcessorArchitecture="x64" />
   <Properties>
-    <DisplayName>XS Notify</DisplayName>
+    <DisplayName>XSNotify</DisplayName>
     <PublisherDisplayName>Gozar Productions</PublisherDisplayName>
     <Description>Sends all windows notifications to XSOverlay</Description>
     <Logo>images\icon.png</Logo>
@@ -35,7 +35,7 @@
       EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
         BackgroundColor="#464646"
-        DisplayName="XS Notify"
+        DisplayName="XSNotify"
         Square150x150Logo="images\icon.png"
         Square44x44Logo="images\small_icon.png"
         Description="Sends all windows notifications to XSOverlay" />
