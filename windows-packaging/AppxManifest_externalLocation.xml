@@ -7,12 +7,12 @@
   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
   xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
   IgnorableNamespaces="uap uap2 uap3 rescap desktop uap10">
-  <Identity Name="XSOverlayNotifier"
+  <Identity Name="XSNotify"
     Version="1.0.0.0"
-    Publisher="CN=Blusk" />
+    Publisher="CN=GozarProductions" />
   <Properties>
-    <DisplayName>XSOverlay Notifier</DisplayName>
-    <PublisherDisplayName>Blusk</PublisherDisplayName>
+    <DisplayName>XS Notify</DisplayName>
+    <PublisherDisplayName>Gozar Productions</PublisherDisplayName>
     <Logo>images\icon.png</Logo>
     <uap10:AllowExternalContent>true</uap10:AllowExternalContent>
   </Properties>
@@ -24,7 +24,7 @@
     <Resource Language="en-us" />
   </Resources>
   <Applications>
-    <Application Id="XSOverlayNotifier" Executable="xsoverlay_notifier.exe"
+    <Application Id="XSNotify" Executable="XSNotify.exe"
       uap10:TrustLevel="mediumIL" uap10:RuntimeBehavior="win32App">
       <uap:VisualElements AppListEntry="none" DisplayName="Contoso PhotoStore"
         Description="Demonstrate photo app" BackgroundColor="transparent"

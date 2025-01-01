@@ -46,7 +46,7 @@ async fn connect_udp(host: &String, port: usize) -> anyhow::Result<UdpSocket> {
     Ok(socket)
 }
 
-pub async fn xsoverlay_notifier(
+pub async fn xs_notify(
     rx: &mut mpsc::UnboundedReceiver<XSOverlayMessage>,
     host: &String,
     port: usize,

@@ -9,7 +9,7 @@ use tokio::{
     sync::mpsc,
 };
 use twelf::Layer;
-use xsoverlay::xsoverlay_notifier;
+use xsoverlay::xs_notify;
 
 pub mod config;
 pub mod notif_handling;
@@ -20,7 +20,7 @@ async fn start() -> anyhow::Result<()> {
         .filter_level(log::LevelFilter::Debug)
         .init();
     let matches = NotifierConfig::command().get_matches();
-    let project_dirs = ProjectDirs::from("dev", "blusk", "xsoverlay_notifier")
+    let project_dirs = ProjectDirs::from("dev", "Gozar Productions", "XS Notify")
         .ok_or_else(|| anyhow::anyhow!("project dir lookup failed"))?;
     let config_file_path = project_dirs.config_dir().join("./config.toml");
     log::info!("checking if config file exists...");
@@ -42,7 +42,7 @@ async fn start() -> anyhow::Result<()> {
         let config = config.clone();
         tokio::spawn(async move {
             loop {
-                let res = xsoverlay_notifier(&mut rx, &config.host, config.port).await;
+                let res = xs_notify(&mut rx, &config.host, config.port).await;
                 log::error!(
                     "XSOverlay notification sender died unexpectedly: {:?}, restarting sender",
                     res

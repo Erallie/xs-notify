@@ -1,5 +1,5 @@
 [package]
-name = "xsoverlay_notifier"
+name = "XSNotify"
 version = "0.1.0"
 edition = "2021"
 
