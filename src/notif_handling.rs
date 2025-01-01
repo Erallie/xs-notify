@@ -158,8 +158,14 @@ pub async fn notif_to_message(
             .flat_map(|line| line.split_whitespace())
             .count() as f32;
     // println!("Word count: {}", words);
-    let first_timeout = words / reading_speed * 60 as f32;
-    let timeout = f32::min(f32::max(first_timeout, min_timeout), max_timeout);
+    let mut timeout = config.default_timeout;
+    if config.dynamic_timeout {
+        let first_timeout = words / config.reading_speed * 60 as f32;
+        timeout = f32::min(
+            f32::max(first_timeout, config.min_timeout),
+            config.max_timeout,
+        );
+    }
 
     Ok(XSOverlayMessage {
         messageType: 1,
