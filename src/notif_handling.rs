@@ -53,14 +53,38 @@ use crate::xsoverlay::XSOverlayMessage;
     }
 } */
 
+fn get_app_name(notif: &UserNotification) -> anyhow::Result<String> {
+    let app_info = notif.AppInfo()?;
+    let display_info = app_info.DisplayInfo()?;
+    let app_name = display_info.DisplayName()?.to_string();
+    Ok(app_name)
+}
+
 pub async fn notif_to_message(
     notif: UserNotification,
     config: &NotifierConfig,
     // max_characters: usize,
 ) -> anyhow::Result<XSOverlayMessage> {
-    let app_info = notif.AppInfo()?;
-    let display_info = app_info.DisplayInfo()?;
-    let app_name = display_info.DisplayName()?.to_string();
+    let app_name = get_app_name(&notif).unwrap();
+
+    // Check if the app name is in the skipped apps list
+    if config.skipped_apps.contains(&app_name) {
+        // Skip the rest of the code and return an empty XSOverlayMessage
+        return Ok(XSOverlayMessage {
+            messageType: 0, // or any other default value
+            index: 0,
+            timeout: 0.0,
+            height: 0.0,
+            opacity: 0.0,
+            volume: 0.0,
+            audioPath: "default".to_string(),
+            title: "".to_string(),
+            content: "".to_string(),
+            useBase64Icon: false,
+            icon: "default".to_string(),
+            sourceApp: app_name.clone(), // Clone if you need to use it later
+        });
+    }
     // println!("App: {}", app_name);
     /* let icon = read_logo(display_info)
     .await
@@ -189,11 +213,19 @@ pub async fn polling_notification_handler(
                     })
                     .is_none()
             }) {
-                log::info!("handling new notification");
-                let msg = notif_to_message(notif, config).await;
-                match msg {
-                    Ok(msg) => tx.send(msg)?,
-                    Err(e) => println!("Failed to convert notification to XSOverlay message: {e}"),
+                log::info!("Handling new notification");
+
+                let app_name = get_app_name(&notif).unwrap();
+                if config.skipped_apps.contains(&app_name) {
+                    println!("Skipping notification from {}", app_name);
+                } else {
+                    let msg = notif_to_message(notif, config).await;
+                    match msg {
+                        Ok(msg) => tx.send(msg)?,
+                        Err(e) => {
+                            println!("Failed to convert notification to XSOverlay message: {e}")
+                        }
+                    }
                 }
             }
         }
@@ -214,7 +246,7 @@ pub async fn listening_notification_handler(
             move |_sender, args: &Option<UserNotificationChangedEventArgs>| {
                 if let Some(event) = args {
                     if event.ChangeKind()? == UserNotificationChangedKind::Added {
-                        log::info!("handling new notification event");
+                        log::info!("Handling new notification event");
                         let id = event.UserNotificationId()?;
                         if let Err(e) = new_notif_tx.send(id) {
                             log::error!("Error sending ID of new notification: {e}");
@@ -224,16 +256,22 @@ pub async fn listening_notification_handler(
                 Ok(())
             },
         ))
-        .context("failed to register notification change handler")?;
+        .context("Failed to register notification change handler")?;
     while let Some(notif_id) = new_notif_rx.recv().await {
         if let Err(e) = async {
             let notif = listener
                 .GetNotification(notif_id)
-                .context(format!("failed to get notification {notif_id}"))?;
-            let msg = notif_to_message(notif, config).await;
-            match msg {
-                Ok(msg) => tx.send(msg)?,
-                Err(e) => println!("Failed to convert notification to XSOverlay message: {e}"),
+                .context(format!("Failed to get notification {notif_id}"))?;
+
+            let app_name = get_app_name(&notif).unwrap();
+            if config.skipped_apps.contains(&app_name) {
+                println!("Skipping notification from {}", app_name);
+            } else {
+                let msg = notif_to_message(notif, config).await;
+                match msg {
+                    Ok(msg) => tx.send(msg)?,
+                    Err(e) => println!("Failed to convert notification to XSOverlay message: {e}"),
+                }
             }
             anyhow::Ok(())
         }
