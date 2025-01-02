@@ -41,6 +41,9 @@ reading_speed = 238
 min_timeout = 2
 # When dynamic_timeout is enabled, notifications will never display for more than this many seconds.
 max_timeout = 120
+# If there are apps you don't want XS Notify to push notifications for, add their names in quotation marks ( "" ) to the brackets below, separated by commas ( , ).
+# It should look something like this: ["Example App 1", "Example App 2"]
+skipped_apps = []
 ```
 # Support
 If you have any problems with this tool or want to request a feature, please create an [issue](https://github.com/Erallie/xs-notify/issues), and I will try to address it to the best of my ability!
