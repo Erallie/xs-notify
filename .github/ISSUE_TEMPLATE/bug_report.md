@@ -23,6 +23,10 @@ A clear and concise description of what you expected to happen.
 # Screenshots
 If applicable, add screenshots to help explain your problem.
 
+# Config file
+Attach or copy and paste your `config.toml` file here.
+This file can be found in in your files under `%APPDATA%\Gozar Productions LLC\XS Notify\config\config.toml`.
+
 # Specs
 Windows Version: [e.g. Windows 10/Windows 11]
 XS Notify Version: [e.g. v1.0.12]
