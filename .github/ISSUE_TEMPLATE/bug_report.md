@@ -23,5 +23,9 @@ A clear and concise description of what you expected to happen.
 # Screenshots
 If applicable, add screenshots to help explain your problem.
 
+# Specs
+Windows Version: [e.g. Windows 10/Windows 11]
+XS Notify Version: [e.g. v1.0.12]
+
 # Additional context
 Add any other context about the problem here.
