@@ -9,6 +9,7 @@ edition = "2021"
 anyhow = "1.0.68"
 base64 = "0.20.0"
 clap = { version = "4.0.32", features = ["derive"] }
+colored = "2.2.0"
 crossterm = "0.25.0"
 directories = "4.0.1"
 futures = "0.3.25"
