@@ -3,6 +3,9 @@ use clap::CommandFactory;
 use config::NotifierConfig;
 use directories::ProjectDirs;
 use notif_handling::notification_listener;
+use reqwest::Error;
+use semver::Version;
+use serde::Deserialize;
 use tokio::{
     fs::{create_dir_all, File},
     io::AsyncWriteExt,
@@ -14,6 +17,11 @@ use xsoverlay::xs_notify;
 pub mod config;
 pub mod notif_handling;
 pub mod xsoverlay;
+
+#[derive(Deserialize)]
+struct Release {
+    tag_name: String,
+}
 
 async fn start() -> anyhow::Result<()> {
     pretty_env_logger::formatted_builder()
@@ -58,5 +66,56 @@ async fn start() -> anyhow::Result<()> {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Call fetch_latest and handle the result
+    match fetch_latest().await {
+        Ok(_) => {
+            // Successfully fetched the latest version
+        }
+        Err(e) => {
+            // Print the error and continue
+            eprintln!("Error fetching the latest version: {}", e);
+        }
+    }
+
+    // Now start the main application
     start().await
+}
+
+async fn fetch_latest() -> Result<(), Error> {
+    // Replace with your GitHub username and repository
+    let username = "Erallie";
+    let repository = "xs-notify";
+    let current_version = "1.0.1"; // Replace with your current version
+
+    // Fetch the latest release from GitHub
+    let url = format!(
+        "https://api.github.com/repos/{}/{}/releases/latest",
+        username, repository
+    );
+    let client = reqwest::Client::new();
+    let response = client
+        .get(&url)
+        .header("User-Agent", "reqwest")
+        .send()
+        .await?
+        .json::<Release>()
+        .await?;
+
+    // Compare versions
+    let latest_version = &response.tag_name[1..]; // Remove the 'v' prefix
+    if let Ok(latest) = Version::parse(latest_version) {
+        if let Ok(current) = Version::parse(current_version) {
+            if latest > current {
+                println!("A new version is available: v{}\nCtrl + click the following link to download it: https://github.com/{}/{}/releases/tag/v{}", latest, username, repository, latest);
+            } else {
+                println!("You are on the latest version: v{}", current);
+            }
+        } else {
+            eprintln!("Invalid current version format: v{}", current_version);
+        }
+    } else {
+        eprintln!("Invalid latest version format: v{}", latest_version);
+    }
+
+    Ok(())
 }
