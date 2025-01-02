@@ -16,3 +16,5 @@ reading_speed = 238
 min_timeout = 2
 # When dynamic_timeout is enabled, notifications will never display for more than this many seconds.
 max_timeout = 120
+# If there are apps you don't want XS Notify to push notifications for, add them in quotation marks ( "" ) to the array below.
+skipped_apps = ["Example App 1", "Example App 2"]

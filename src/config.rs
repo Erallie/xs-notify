@@ -37,9 +37,10 @@ pub struct NotifierConfig {
 
     #[arg(long, default_value_t = 180.)]
     pub max_timeout: f32,
-    /*
-    #[arg(short, long, default_value_t = 500)]
-    pub max_characters: usize, */
+
+    // New field for skipped apps
+    #[arg(long)] // Default to an empty vector
+    pub skipped_apps: Vec<String>, // This will hold the array of strings
 }
 
 impl Default for NotifierConfig {
@@ -54,7 +55,7 @@ impl Default for NotifierConfig {
             reading_speed: 238.,
             min_timeout: 2.,
             max_timeout: 120.,
-            // max_characters: 400,
+            skipped_apps: Vec::new(), // Initialize to an empty vector
         }
     }
 }
