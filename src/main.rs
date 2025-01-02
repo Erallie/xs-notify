@@ -1,5 +1,6 @@
 use anyhow::Context;
 use clap::CommandFactory;
+use colored::Colorize;
 use config::NotifierConfig;
 use directories::ProjectDirs;
 use notif_handling::notification_listener;
@@ -85,7 +86,7 @@ async fn fetch_latest() -> Result<(), Error> {
     // Replace with your GitHub username and repository
     let username = "Erallie";
     let repository = "xs-notify";
-    let current_version = "1.0.1"; // Replace with your current version
+    let current_version = "1.0.2"; // Replace with your current version
 
     // Fetch the latest release from GitHub
     let url = format!(
@@ -106,15 +107,22 @@ async fn fetch_latest() -> Result<(), Error> {
     if let Ok(latest) = Version::parse(latest_version) {
         if let Ok(current) = Version::parse(current_version) {
             if latest > current {
-                println!("A new version is available: v{}\nCtrl + click the following link to download it: https://github.com/{}/{}/releases/tag/v{}", latest, username, repository, latest);
+                let current_formatted = format!("v{}", current);
+                let latest_formatted = format!("v{}", latest);
+                let download_link = format!(
+                    "https://github.com/{}/{}/releases/tag/v{}",
+                    username, repository, latest
+                );
+                println!("Current version: {}\n\n{} is available: {}\nCtrl + click the following link to download it: {}\n", current_formatted.blue(), "A NEW VERSION".purple().italic(), latest_formatted.bright_blue(), download_link.bright_cyan());
             } else {
-                println!("You are on the latest version: v{}", current);
+                let this_formatted = format!("v{}", current);
+                println!("You are on the latest version: {}\n", this_formatted.blue());
             }
         } else {
-            eprintln!("Invalid current version format: v{}", current_version);
+            eprintln!("Invalid current version format: {}", current_version);
         }
     } else {
-        eprintln!("Invalid latest version format: v{}", latest_version);
+        eprintln!("Invalid latest version format: {}", latest_version);
     }
 
     Ok(())
