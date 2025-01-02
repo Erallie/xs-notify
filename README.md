@@ -1,7 +1,7 @@
 # XS Notify
 Forked from [XSOverlay Notifier](https://github.com/bluskript/xsoverlay-notifier).
 
-This is a desktop application that runs alongside XSOverlay and sends all windows notifications to display in VR. It uses the [Windows Notification Listener API](https://learn.microsoft.com/en-us/windows/apps/design/shell/tiles-and-notifications/notification-listener) to listen for notifications.
+This is a desktop application that runs alongside XSOverlay and sends all windows desktop notifications to display in VR. It uses the [Windows Notification Listener API](https://learn.microsoft.com/en-us/windows/apps/design/shell/tiles-and-notifications/notification-listener) to listen for notifications.
 # Installation
 1. Head over to the [Releases](https://github.com/Erallie/xs-notify/releases) page and find the latest release.
 2. Under **Assets**, download `xs_notify.exe`
