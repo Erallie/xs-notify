@@ -12,7 +12,11 @@ use iced::{
 use notif_handling::notification_listener;
 use reqwest::Error;
 use semver::Version;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use std::{
+    fs,
+    io::{self, Write},
+};
 use tokio::{
     fs::{create_dir_all, File},
     io::AsyncWriteExt,
@@ -89,6 +93,8 @@ async fn main() -> iced::Result {
     // Now start the main application
     // start().await
 
+    // let mut settings = XSNotifySettings::default();
+
     iced::run(
         "XS Notify",
         XSNotifySettings::update,
@@ -96,7 +102,7 @@ async fn main() -> iced::Result {
     )
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct XSNotifySettings {
     port: usize,
     host: String,
@@ -114,17 +120,39 @@ struct XSNotifySettings {
 
 impl Default for XSNotifySettings {
     fn default() -> Self {
-        XSNotifySettings {
-            port: 42069,
-            host: String::from("localhost"),
-            polling_rate: 250,
-            dynamic_timeout: true,
-            default_timeout: 5.0,
-            reading_speed: 238.,
-            min_timeout: 2.,
-            max_timeout: 120.,
-            skipped_apps: Vec::<String>::new(),
+        fn load_from_file() -> anyhow::Result<XSNotifySettings> {
+            let default_settings = XSNotifySettings {
+                port: 42069,
+                host: String::from("localhost"),
+                polling_rate: 250,
+                dynamic_timeout: true,
+                default_timeout: 5.0,
+                reading_speed: 238.,
+                min_timeout: 2.,
+                max_timeout: 120.,
+                skipped_apps: Vec::<String>::new(),
+            };
+            let project_dirs = ProjectDirs::from("dev", "Gozar Productions LLC", "XS Notify")
+                .ok_or_else(|| anyhow::anyhow!("project dir lookup failed"))?;
+
+            let config_dir = project_dirs.config_dir();
+            if !config_dir.exists() {
+                return Ok(default_settings);
+            }
+
+            let config_file_path = config_dir.join("config.toml");
+
+            if !config_file_path.exists() {
+                return Ok(default_settings);
+            }
+
+            let contents = fs::read_to_string(config_file_path)?;
+            let settings: XSNotifySettings =
+                toml::from_str(&contents).expect("Failed to deserialize settings");
+            return Ok(settings);
         }
+
+        load_from_file().unwrap()
     }
 }
 
@@ -150,24 +178,26 @@ enum Message {
 } */
 
 impl XSNotifySettings {
-    /* type Message = Message;
-    type Executor = iced::executor::Default;
-    type Flags = (); */
+    // Save settings to a TOML file
+    fn save_to_file(&self) -> anyhow::Result<()> {
+        let project_dirs = ProjectDirs::from("dev", "Gozar Productions LLC", "XS Notify")
+            .ok_or_else(|| anyhow::anyhow!("project dir lookup failed"))?;
 
-    /* fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        (
-            MyApp {
-                settings: Settings::default(),
-                current_skipped_app: String::new(),
-            },
-            Command::none(),
-        )
-    } */
+        let config_dir = project_dirs.config_dir();
+        if !config_dir.exists() {
+            fs::create_dir_all(config_dir)?; // Ensure the directory exists
+        }
 
-    /* fn title(&self) -> String {
-        String::from("XS Notify")
-    } */
+        let config_file_path = config_dir.join("config.toml");
+        let toml_string = toml::to_string(self).expect("Failed to serialize settings");
 
+        let mut file = fs::File::create(config_file_path)?;
+        file.write_all(toml_string.as_bytes())?;
+
+        Ok(())
+    }
+
+    // Load settings from a TOML file
     fn update(&mut self, message: Message) {
         match message {
             Message::SetPort(value) => {
@@ -266,6 +296,7 @@ impl XSNotifySettings {
                   // self.settings.skipped_apps.retain(|&x| x != value);
               } */
         }
+        let _save = &self.save_to_file();
     }
 
     fn view(&self) -> Column<Message> {
@@ -339,17 +370,7 @@ impl XSNotifySettings {
 
 #[test]
 fn settings_update_tests() {
-    let mut settings = XSNotifySettings {
-        port: 42069,
-        host: String::from("localhost"),
-        polling_rate: 250,
-        dynamic_timeout: true,
-        default_timeout: 5.0,
-        reading_speed: 238.,
-        min_timeout: 2.,
-        max_timeout: 120.,
-        skipped_apps: Vec::<String>::new(),
-    };
+    let mut settings = XSNotifySettings::default();
 
     // Test setting the port
     settings.update(Message::SetPort(String::from("2000")));
