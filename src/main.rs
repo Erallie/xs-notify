@@ -3,6 +3,7 @@ use clap::CommandFactory;
 use colored::Colorize;
 use config::NotifierConfig;
 use directories::ProjectDirs;
+use futures::stream::ForEach;
 use iced::{
     widget::{
         button, checkbox, column, row, slider, text, text_input, Column, Row, Text, TextInput,
@@ -95,11 +96,7 @@ async fn main() -> iced::Result {
 
     // let mut settings = XSNotifySettings::default();
 
-    iced::run(
-        "XS Notify",
-        XSNotifySettings::update,
-        XSNotifySettings::view,
-    )
+    iced::run("XS Notify", XSNotify::update, XSNotify::view)
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -156,6 +153,21 @@ impl Default for XSNotifySettings {
     }
 }
 
+#[derive(Debug)]
+struct XSNotify {
+    settings: XSNotifySettings,
+    current_skipped_app: String,
+}
+
+impl Default for XSNotify {
+    fn default() -> Self {
+        XSNotify {
+            settings: XSNotifySettings::default(),
+            current_skipped_app: String::new(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 enum Message {
     SetPort(String),
@@ -168,8 +180,9 @@ enum Message {
     SetReadingSpeed(String),
     SetMinTimeout(String),
     SetMaxTimeout(String),
-    // AddSkippedApp(String),
-    // RemoveSkippedApp(String),
+    SetCurrentApp(String),
+    AddSkippedApp(),
+    RemoveSkippedApp(String),
 }
 
 /* struct Interface {
@@ -177,7 +190,7 @@ enum Message {
     current_skipped_app: String,
 } */
 
-impl XSNotifySettings {
+impl XSNotify {
     // Save settings to a TOML file
     fn save_to_file(&self) -> anyhow::Result<()> {
         let project_dirs = ProjectDirs::from("dev", "Gozar Productions LLC", "XS Notify")
@@ -189,7 +202,7 @@ impl XSNotifySettings {
         }
 
         let config_file_path = config_dir.join("config.toml");
-        let toml_string = toml::to_string(self).expect("Failed to serialize settings");
+        let toml_string = toml::to_string(&self.settings).expect("Failed to serialize settings");
 
         let mut file = fs::File::create(config_file_path)?;
         file.write_all(toml_string.as_bytes())?;
@@ -206,7 +219,7 @@ impl XSNotifySettings {
                     // Attempt to convert the string to usize
                     match value.parse::<usize>() {
                         Ok(new_value) => {
-                            self.port = new_value;
+                            self.settings.port = new_value;
                         }
                         Err(e) => {
                             println!("Failed to convert to usize: {}", e);
@@ -215,7 +228,7 @@ impl XSNotifySettings {
                 }
             }
             Message::SetHost(value) => {
-                self.host = value;
+                self.settings.host = value;
             }
             Message::SetPollingRate(value) => {
                 // Allow only digits and empty input
@@ -223,7 +236,7 @@ impl XSNotifySettings {
                     // Attempt to convert the string to usize
                     match value.parse::<u64>() {
                         Ok(new_value) => {
-                            self.polling_rate = new_value;
+                            self.settings.polling_rate = new_value;
                         }
                         Err(e) => {
                             println!("Failed to convert to u64: {}", e);
@@ -232,7 +245,7 @@ impl XSNotifySettings {
                 }
             }
             Message::SetDynamicTimeout(value) => {
-                self.dynamic_timeout = value;
+                self.settings.dynamic_timeout = value;
             }
             Message::SetDefaultTimeout(value) => {
                 // Allow only digits and empty input
@@ -240,7 +253,7 @@ impl XSNotifySettings {
                     // Attempt to convert the string to usize
                     match value.parse::<f32>() {
                         Ok(new_value) => {
-                            self.default_timeout = new_value;
+                            self.settings.default_timeout = new_value;
                         }
                         Err(e) => {
                             println!("Failed to convert to f32: {}", e);
@@ -254,7 +267,7 @@ impl XSNotifySettings {
                     // Attempt to convert the string to usize
                     match value.parse::<f32>() {
                         Ok(new_value) => {
-                            self.reading_speed = new_value;
+                            self.settings.reading_speed = new_value;
                         }
                         Err(e) => {
                             println!("Failed to convert to f32: {}", e);
@@ -268,7 +281,7 @@ impl XSNotifySettings {
                     // Attempt to convert the string to usize
                     match value.parse::<f32>() {
                         Ok(new_value) => {
-                            self.min_timeout = new_value;
+                            self.settings.min_timeout = new_value;
                         }
                         Err(e) => {
                             println!("Failed to convert to f32: {}", e);
@@ -282,77 +295,90 @@ impl XSNotifySettings {
                     // Attempt to convert the string to usize
                     match value.parse::<f32>() {
                         Ok(new_value) => {
-                            self.max_timeout = new_value;
+                            self.settings.max_timeout = new_value;
                         }
                         Err(e) => {
                             println!("Failed to convert to f32: {}", e);
                         }
                     }
                 }
-            } /* Message::AddSkippedApp(value) => {
-                  self.settings.skipped_apps.push(value);
-              }
-              Message::RemoveSkippedApp(value) => {
-                  // self.settings.skipped_apps.retain(|&x| x != value);
-              } */
+            }
+            Message::SetCurrentApp(value) => {
+                self.current_skipped_app = value;
+            }
+            Message::AddSkippedApp() => {
+                self.settings
+                    .skipped_apps
+                    .push(self.current_skipped_app.clone());
+
+                self.current_skipped_app = String::new();
+            }
+            Message::RemoveSkippedApp(value) => {
+                self.settings.skipped_apps.retain(|x| *x != value);
+            }
         }
         let _save = &self.save_to_file();
     }
 
     fn view(&self) -> Column<Message> {
         let port_input: TextInput<'_, Message, Theme, Renderer> =
-            text_input("Enter a number...", &self.port.to_string()).on_input(Message::SetPort);
+            text_input("Enter a number...", &self.settings.port.to_string())
+                .on_input(Message::SetPort);
 
         let port = row!["Port", port_input];
 
         let host_input: TextInput<'_, Message, Theme, Renderer> =
-            text_input("localhost", &self.host).on_input(Message::SetHost);
+            text_input("localhost", &self.settings.host).on_input(Message::SetHost);
 
         let host = row!["Host", host_input];
 
         let polling_rate_input: TextInput<'_, Message, Theme, Renderer> =
-            text_input("Enter a number...", &self.polling_rate.to_string())
+            text_input("Enter a number...", &self.settings.polling_rate.to_string())
                 .on_input(Message::SetPollingRate);
 
         let polling_rate = row!["Polling rate", polling_rate_input];
 
-        let dynamic_timeout_checkbox =
-            checkbox("Dynamic Timeout", self.dynamic_timeout).on_toggle(Message::SetDynamicTimeout);
+        let dynamic_timeout_checkbox = checkbox("Dynamic Timeout", self.settings.dynamic_timeout)
+            .on_toggle(Message::SetDynamicTimeout);
 
         let dynamic_timeout = row!["Dynamic timeout", dynamic_timeout_checkbox];
 
-        let default_timeout_slider = text_input("Default: 5", &self.default_timeout.to_string())
-            .on_input(Message::SetDefaultTimeout);
+        let default_timeout_slider =
+            text_input("Default: 5", &self.settings.default_timeout.to_string())
+                .on_input(Message::SetDefaultTimeout);
 
         let default_timeout = row!["Default timeout", default_timeout_slider];
 
-        let reading_speed_slider = text_input("Default: 238", &self.reading_speed.to_string())
-            .on_input(Message::SetReadingSpeed);
+        let reading_speed_slider =
+            text_input("Default: 238", &self.settings.reading_speed.to_string())
+                .on_input(Message::SetReadingSpeed);
 
         let reading_speed = row!["Reading speed", reading_speed_slider];
 
-        let min_timeout_slider = text_input("Default: 2", &self.min_timeout.to_string())
+        let min_timeout_slider = text_input("Default: 2", &self.settings.min_timeout.to_string())
             .on_input(Message::SetMinTimeout);
 
         let min_timeout = row!["Minimum timeout", min_timeout_slider];
 
-        let max_timeout_slider = text_input("Default: 5", &self.max_timeout.to_string())
+        let max_timeout_slider = text_input("Default: 5", &self.settings.max_timeout.to_string())
             .on_input(Message::SetMaxTimeout);
 
         let max_timeout = row!["Maximum timeout", max_timeout_slider];
 
-        /* let skipped_apps_input =
+        let skipped_apps_input: TextInput<'_, Message, Theme, Renderer> =
             text_input("Type an application name...", &self.current_skipped_app)
-                .on_submit(Message::AddSkippedApp);
+                .on_input(Message::SetCurrentApp)
+                .on_submit(Message::AddSkippedApp());
 
-        let skipped_apps_row = Row::new().push(Text::new("Items:")).extend(
+        let skipped_apps_row2 =
             self.settings
                 .skipped_apps
                 .iter()
-                .map(|item| Text::new(item.clone())),
-        );
-
-        let skipped_apps = Row::new().push(skipped_apps_input).push(skipped_apps_row); */
+                .fold(Row::new(), |row: Row<'_, Message>, item| {
+                    row.push(Text::new(item.clone()))
+                        .push(button("x").on_press(Message::RemoveSkippedApp(item.clone())))
+                });
+        let skipped_apps_row1 = row!["Skipped apps", skipped_apps_input];
         let interface = column![
             port,
             host,
@@ -361,7 +387,9 @@ impl XSNotifySettings {
             default_timeout,
             reading_speed,
             min_timeout,
-            max_timeout
+            max_timeout,
+            skipped_apps_row1,
+            skipped_apps_row2
         ];
 
         interface
@@ -370,39 +398,47 @@ impl XSNotifySettings {
 
 #[test]
 fn settings_update_tests() {
-    let mut settings = XSNotifySettings::default();
+    let mut xs_notify = XSNotify::default();
 
     // Test setting the port
-    settings.update(Message::SetPort(String::from("2000")));
-    assert_eq!(settings.port, 2000);
+    xs_notify.update(Message::SetPort(String::from("2000")));
+    assert_eq!(xs_notify.settings.port, 2000);
 
     // Test setting the host
-    settings.update(Message::SetHost(String::from("testing")));
-    assert_eq!(settings.host, String::from("testing"));
+    xs_notify.update(Message::SetHost(String::from("testing")));
+    assert_eq!(xs_notify.settings.host, String::from("testing"));
 
     // Test setting the polling rate
-    settings.update(Message::SetPollingRate(String::from("100")));
-    assert_eq!(settings.polling_rate, 100);
+    xs_notify.update(Message::SetPollingRate(String::from("100")));
+    assert_eq!(xs_notify.settings.polling_rate, 100);
 
     // Test setting dynamic timeout
-    settings.update(Message::SetDynamicTimeout(false));
-    assert_eq!(settings.dynamic_timeout, false);
+    xs_notify.update(Message::SetDynamicTimeout(false));
+    assert_eq!(xs_notify.settings.dynamic_timeout, false);
 
     // Test setting default timeout
-    settings.update(Message::SetDefaultTimeout(String::from("10")));
-    assert_eq!(settings.default_timeout, 10.);
+    xs_notify.update(Message::SetDefaultTimeout(String::from("10")));
+    assert_eq!(xs_notify.settings.default_timeout, 10.);
 
     // Test setting reading speed
-    settings.update(Message::SetReadingSpeed(String::from("200")));
-    assert_eq!(settings.reading_speed, 200.);
+    xs_notify.update(Message::SetReadingSpeed(String::from("200")));
+    assert_eq!(xs_notify.settings.reading_speed, 200.);
 
     // Test setting minimum timeout
-    settings.update(Message::SetMinTimeout(String::from("5")));
-    assert_eq!(settings.min_timeout, 5.);
+    xs_notify.update(Message::SetMinTimeout(String::from("5")));
+    assert_eq!(xs_notify.settings.min_timeout, 5.);
 
     // Test setting maximum timeout
-    settings.update(Message::SetMaxTimeout(String::from("30")));
-    assert_eq!(settings.max_timeout, 30.);
+    xs_notify.update(Message::SetMaxTimeout(String::from("30")));
+    assert_eq!(xs_notify.settings.max_timeout, 30.);
+
+    xs_notify.update(Message::SetCurrentApp(String::from("VRCX")));
+    xs_notify.update(Message::AddSkippedApp());
+    xs_notify.update(Message::SetCurrentApp(String::from("Discord")));
+    xs_notify.update(Message::AddSkippedApp());
+    xs_notify.update(Message::RemoveSkippedApp(String::from("Discord")));
+
+    assert_eq!(xs_notify.settings.skipped_apps, vec![String::from("VRCX")])
 }
 
 async fn fetch_latest() -> Result<(), Error> {
