@@ -181,13 +181,8 @@ impl XSNotify {
                 // Allow only digits and empty input
                 if value.is_empty() || value.chars().all(char::is_numeric) {
                     // Attempt to convert the string to usize
-                    match value.parse::<usize>() {
-                        Ok(new_value) => {
-                            self.settings.port = new_value;
-                        }
-                        Err(e) => {
-                            println!("Failed to convert to usize: {}", e);
-                        }
+                    if let Ok(new_value) = value.parse::<usize>() {
+                        self.settings.port = new_value;
                     }
                 }
             }
@@ -198,13 +193,8 @@ impl XSNotify {
                 // Allow only digits and empty input
                 if value.is_empty() || value.chars().all(char::is_numeric) {
                     // Attempt to convert the string to usize
-                    match value.parse::<u64>() {
-                        Ok(new_value) => {
-                            self.settings.polling_rate = new_value;
-                        }
-                        Err(e) => {
-                            println!("Failed to convert to u64: {}", e);
-                        }
+                    if let Ok(new_value) = value.parse::<u64>() {
+                        self.settings.polling_rate = new_value;
                     }
                 }
             }
@@ -215,13 +205,8 @@ impl XSNotify {
                 // Allow only digits and empty input
                 if value.is_empty() || value.chars().all(char::is_numeric) {
                     // Attempt to convert the string to usize
-                    match value.parse::<f32>() {
-                        Ok(new_value) => {
-                            self.settings.default_timeout = new_value;
-                        }
-                        Err(e) => {
-                            println!("Failed to convert to f32: {}", e);
-                        }
+                    if let Ok(new_value) = value.parse::<f32>() {
+                        self.settings.default_timeout = new_value;
                     }
                 }
             }
@@ -229,13 +214,8 @@ impl XSNotify {
                 // Allow only digits and empty input
                 if value.is_empty() || value.chars().all(char::is_numeric) {
                     // Attempt to convert the string to usize
-                    match value.parse::<f32>() {
-                        Ok(new_value) => {
-                            self.settings.reading_speed = new_value;
-                        }
-                        Err(e) => {
-                            println!("Failed to convert to f32: {}", e);
-                        }
+                    if let Ok(new_value) = value.parse::<f32>() {
+                        self.settings.reading_speed = new_value;
                     }
                 }
             }
@@ -243,13 +223,8 @@ impl XSNotify {
                 // Allow only digits and empty input
                 if value.is_empty() || value.chars().all(char::is_numeric) {
                     // Attempt to convert the string to usize
-                    match value.parse::<f32>() {
-                        Ok(new_value) => {
-                            self.settings.min_timeout = new_value;
-                        }
-                        Err(e) => {
-                            println!("Failed to convert to f32: {}", e);
-                        }
+                    if let Ok(new_value) = value.parse::<f32>() {
+                        self.settings.min_timeout = new_value;
                     }
                 }
             }
@@ -257,13 +232,8 @@ impl XSNotify {
                 // Allow only digits and empty input
                 if value.is_empty() || value.chars().all(char::is_numeric) {
                     // Attempt to convert the string to usize
-                    match value.parse::<f32>() {
-                        Ok(new_value) => {
-                            self.settings.max_timeout = new_value;
-                        }
-                        Err(e) => {
-                            println!("Failed to convert to f32: {}", e);
-                        }
+                    if let Ok(new_value) = value.parse::<f32>() {
+                        self.settings.max_timeout = new_value;
                     }
                 }
             }
