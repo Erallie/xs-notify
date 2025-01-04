@@ -245,7 +245,7 @@ impl XSNotify {
                     .skipped_apps
                     .push(self.current_skipped_app.clone());
 
-                self.current_skipped_app = String::new();
+                self.current_skipped_app.clear();
             }
             Message::RemoveSkippedApp(value) => {
                 self.settings.skipped_apps.retain(|x| *x != value);
