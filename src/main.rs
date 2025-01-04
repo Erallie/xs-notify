@@ -78,6 +78,7 @@ struct Release {
 //     }
 // }
 
+// Entry point of the application
 #[tokio::main]
 async fn main() -> iced::Result {
     // Call fetch_latest and handle the result
@@ -131,6 +132,7 @@ enum Message {
     SetReadingSpeed(String),
     SetMinTimeout(String),
     SetMaxTimeout(String),
+
     SetCurrentApp(String),
     AddSkippedApp(),
     RemoveSkippedApp(String),
@@ -178,9 +180,7 @@ impl XSNotify {
                 self.settings.auto_run = value;
             }
             Message::SetPort(value) => {
-                // Allow only digits and empty input
                 if value.is_empty() || value.chars().all(char::is_numeric) {
-                    // Attempt to convert the string to usize
                     if let Ok(new_value) = value.parse::<usize>() {
                         self.settings.port = new_value;
                     }
@@ -190,9 +190,7 @@ impl XSNotify {
                 self.settings.host = value;
             }
             Message::SetPollingRate(value) => {
-                // Allow only digits and empty input
                 if value.is_empty() || value.chars().all(char::is_numeric) {
-                    // Attempt to convert the string to usize
                     if let Ok(new_value) = value.parse::<u64>() {
                         self.settings.polling_rate = new_value;
                     }
@@ -202,36 +200,28 @@ impl XSNotify {
                 self.settings.dynamic_timeout = value;
             }
             Message::SetDefaultTimeout(value) => {
-                // Allow only digits and empty input
                 if value.is_empty() || value.chars().all(char::is_numeric) {
-                    // Attempt to convert the string to usize
                     if let Ok(new_value) = value.parse::<f32>() {
                         self.settings.default_timeout = new_value;
                     }
                 }
             }
             Message::SetReadingSpeed(value) => {
-                // Allow only digits and empty input
                 if value.is_empty() || value.chars().all(char::is_numeric) {
-                    // Attempt to convert the string to usize
                     if let Ok(new_value) = value.parse::<f32>() {
                         self.settings.reading_speed = new_value;
                     }
                 }
             }
             Message::SetMinTimeout(value) => {
-                // Allow only digits and empty input
                 if value.is_empty() || value.chars().all(char::is_numeric) {
-                    // Attempt to convert the string to usize
                     if let Ok(new_value) = value.parse::<f32>() {
                         self.settings.min_timeout = new_value;
                     }
                 }
             }
             Message::SetMaxTimeout(value) => {
-                // Allow only digits and empty input
                 if value.is_empty() || value.chars().all(char::is_numeric) {
-                    // Attempt to convert the string to usize
                     if let Ok(new_value) = value.parse::<f32>() {
                         self.settings.max_timeout = new_value;
                     }
@@ -244,7 +234,6 @@ impl XSNotify {
                 self.settings
                     .skipped_apps
                     .push(self.current_skipped_app.clone());
-
                 self.current_skipped_app.clear();
             }
             Message::RemoveSkippedApp(value) => {
