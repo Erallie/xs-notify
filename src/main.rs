@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     fs,
     io::{self, Write},
+    path::{Path, PathBuf},
 };
 use tokio::{
     fs::{create_dir_all, File},
@@ -132,15 +133,12 @@ impl Default for XSNotifySettings {
                 max_timeout: 120.,
                 skipped_apps: Vec::<String>::new(),
             };
-            let project_dirs = ProjectDirs::from("dev", "Gozar Productions LLC", "XS Notify")
-                .ok_or_else(|| anyhow::anyhow!("project dir lookup failed"))?;
 
-            let config_dir = project_dirs.config_dir();
+            let config_dir = get_config_dir().unwrap();
             if !config_dir.exists() {
                 return Ok(default_settings);
             }
-
-            let config_file_path = config_dir.join("config.toml");
+            let config_file_path = get_config_file_path(config_dir).unwrap();
 
             if !config_file_path.exists() {
                 return Ok(default_settings);
@@ -195,18 +193,28 @@ enum Message {
     current_skipped_app: String,
 } */
 
+fn get_config_dir() -> anyhow::Result<PathBuf> {
+    let project_dirs = ProjectDirs::from("dev", "Gozar Productions LLC", "XS Notify")
+        .ok_or_else(|| anyhow::anyhow!("project dir lookup failed"))?;
+
+    let config_dir = project_dirs.config_dir();
+
+    Ok(config_dir.to_path_buf())
+}
+
+fn get_config_file_path(config_dir: PathBuf) -> anyhow::Result<PathBuf> {
+    let config_file_path = config_dir.join("config.toml");
+    Ok(config_file_path)
+}
+
 impl XSNotify {
     // Save settings to a TOML file
     fn save_to_file(&self) -> anyhow::Result<()> {
-        let project_dirs = ProjectDirs::from("dev", "Gozar Productions LLC", "XS Notify")
-            .ok_or_else(|| anyhow::anyhow!("project dir lookup failed"))?;
-
-        let config_dir = project_dirs.config_dir();
+        let config_dir = get_config_dir().unwrap();
         if !config_dir.exists() {
-            fs::create_dir_all(config_dir)?; // Ensure the directory exists
+            fs::create_dir_all(&config_dir)?; // Ensure the directory exists
         }
-
-        let config_file_path = config_dir.join("config.toml");
+        let config_file_path = get_config_file_path(config_dir).unwrap();
         let toml_string = toml::to_string(&self.settings).expect("Failed to serialize settings");
 
         let mut file = fs::File::create(config_file_path)?;
