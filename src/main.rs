@@ -299,6 +299,8 @@ impl XSNotify {
             text_input("Type an application name...", &self.current_skipped_app)
                 .on_input(Message::SetCurrentApp)
                 .on_submit(Message::AddSkippedApp());
+        let skipped_apps_add: Button<'_, Message> =
+            button("Add").on_press(Message::AddSkippedApp());
         let skipped_apps_row2 =
             self.settings
                 .skipped_apps
@@ -307,7 +309,7 @@ impl XSNotify {
                     row.push(Text::new(item.clone()))
                         .push(button("x").on_press(Message::RemoveSkippedApp(item.clone())))
                 });
-        let skipped_apps_row1 = row!["Skipped apps", skipped_apps_input];
+        let skipped_apps_row1 = row!["Skipped apps", skipped_apps_input, skipped_apps_add];
 
         let interface = column![
             autorun,
