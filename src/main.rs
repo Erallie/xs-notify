@@ -160,11 +160,11 @@ fn get_config_file_path(config_dir: PathBuf) -> anyhow::Result<PathBuf> {
 impl XSNotify {
     // Save settings to a TOML file
     fn save_to_file(&self) -> anyhow::Result<()> {
-        let config_dir = get_config_dir().unwrap();
+        let config_dir = get_config_dir()?;
         if !config_dir.exists() {
             fs::create_dir_all(&config_dir)?; // Ensure the directory exists
         }
-        let config_file_path = get_config_file_path(config_dir).unwrap();
+        let config_file_path = get_config_file_path(config_dir)?;
         let toml_string = toml::to_string(&self.settings).expect("Failed to serialize settings");
 
         let mut file = fs::File::create(config_file_path)?;
