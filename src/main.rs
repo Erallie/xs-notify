@@ -344,52 +344,43 @@ impl XSNotify {
         let port_input: TextInput<'_, Message, Theme, Renderer> =
             text_input("Enter a number...", &self.settings.port.to_string())
                 .on_input(Message::SetPort);
-
         let port = row!["Port", port_input];
 
         let host_input: TextInput<'_, Message, Theme, Renderer> =
             text_input("localhost", &self.settings.host).on_input(Message::SetHost);
-
         let host = row!["Host", host_input];
 
         let polling_rate_input: TextInput<'_, Message, Theme, Renderer> =
             text_input("Enter a number...", &self.settings.polling_rate.to_string())
                 .on_input(Message::SetPollingRate);
-
         let polling_rate = row!["Polling rate", polling_rate_input];
 
         let dynamic_timeout_checkbox = checkbox("Dynamic Timeout", self.settings.dynamic_timeout)
             .on_toggle(Message::SetDynamicTimeout);
-
         let dynamic_timeout = row!["Dynamic timeout", dynamic_timeout_checkbox];
 
-        let default_timeout_slider =
+        let default_timeout_input =
             text_input("Default: 5", &self.settings.default_timeout.to_string())
                 .on_input(Message::SetDefaultTimeout);
+        let default_timeout = row!["Default timeout", default_timeout_input];
 
-        let default_timeout = row!["Default timeout", default_timeout_slider];
-
-        let reading_speed_slider =
+        let reading_speed_input =
             text_input("Default: 238", &self.settings.reading_speed.to_string())
                 .on_input(Message::SetReadingSpeed);
+        let reading_speed = row!["Reading speed", reading_speed_input];
 
-        let reading_speed = row!["Reading speed", reading_speed_slider];
-
-        let min_timeout_slider = text_input("Default: 2", &self.settings.min_timeout.to_string())
+        let min_timeout_input = text_input("Default: 2", &self.settings.min_timeout.to_string())
             .on_input(Message::SetMinTimeout);
+        let min_timeout = row!["Minimum timeout", min_timeout_input];
 
-        let min_timeout = row!["Minimum timeout", min_timeout_slider];
-
-        let max_timeout_slider = text_input("Default: 5", &self.settings.max_timeout.to_string())
+        let max_timeout_input = text_input("Default: 5", &self.settings.max_timeout.to_string())
             .on_input(Message::SetMaxTimeout);
-
-        let max_timeout = row!["Maximum timeout", max_timeout_slider];
+        let max_timeout = row!["Maximum timeout", max_timeout_input];
 
         let skipped_apps_input: TextInput<'_, Message, Theme, Renderer> =
             text_input("Type an application name...", &self.current_skipped_app)
                 .on_input(Message::SetCurrentApp)
                 .on_submit(Message::AddSkippedApp());
-
         let skipped_apps_row2 =
             self.settings
                 .skipped_apps
@@ -399,6 +390,7 @@ impl XSNotify {
                         .push(button("x").on_press(Message::RemoveSkippedApp(item.clone())))
                 });
         let skipped_apps_row1 = row!["Skipped apps", skipped_apps_input];
+
         let interface = column![
             autorun,
             port,
