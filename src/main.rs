@@ -6,7 +6,8 @@ use directories::ProjectDirs;
 use futures::stream::ForEach;
 use iced::{
     widget::{
-        button, checkbox, column, row, slider, text, text_input, Column, Row, Text, TextInput,
+        button, checkbox, column, row, slider, text, text_input, Checkbox, Column, Row, Text,
+        TextInput,
     },
     Application, Center, Element, Renderer, Settings, Theme,
 };
