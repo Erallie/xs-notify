@@ -145,10 +145,25 @@ impl Default for XSNotifySettings {
                 return Ok(default_settings);
             }
 
-            let contents = fs::read_to_string(config_file_path)?;
-            let settings: XSNotifySettings =
-                toml::from_str(&contents).expect("Failed to deserialize settings");
-            return Ok(settings);
+            let contents = fs::read_to_string(&config_file_path)?;
+            match toml::from_str::<XSNotifySettings>(&contents) {
+                Ok(settings) => Ok(settings),
+                Err(_) => {
+                    // If parsing fails, remove the file and write default settings
+                    let _ = fs::remove_file(&config_file_path); // Ignore the result of remove_file
+
+                    // Serialize the default settings to a string
+                    let toml_string = toml::to_string(&XSNotifySettings::default())
+                        .expect("Failed to serialize default settings");
+
+                    // Create a new file and write the default settings to it
+                    let mut file = fs::File::create(config_file_path)?;
+                    file.write_all(toml_string.as_bytes())?;
+
+                    // Return the default settings
+                    Ok(XSNotifySettings::default())
+                }
+            }
         }
 
         load_from_file().unwrap()
