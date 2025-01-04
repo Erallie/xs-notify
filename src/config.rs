@@ -1,6 +1,9 @@
-use clap::{Parser, ValueEnum};
+use clap::{CommandFactory, Parser, ValueEnum};
 use serde::{Deserialize, Serialize};
-use twelf::config;
+use std::{fs, io::Write, path::PathBuf};
+use twelf::{config, Layer};
+
+use crate::{get_config_dir, get_config_file_path};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Default, ValueEnum)]
 #[serde(rename_all = "snake_case")]
@@ -13,13 +16,16 @@ pub enum NotificationStrategy {
 #[derive(Debug, Clone, Parser, Serialize)]
 #[command(author, version, about, long_about = None)]
 #[config]
-pub struct NotifierConfig {
+pub struct XSNotifySettings {
+    #[arg(short, long, default_value_t = true)]
+    pub auto_run: bool,
+
     #[arg(short, long, default_value_t = 42069)]
     pub port: usize,
     #[arg(long, default_value = "localhost")]
     pub host: String,
-    #[arg(short, long, value_enum, default_value_t = NotificationStrategy::Listener)]
-    pub notification_strategy: NotificationStrategy,
+    // #[arg(short, long, value_enum, default_value_t = NotificationStrategy::Listener)]
+    // pub notification_strategy: NotificationStrategy,
     #[arg(long, default_value_t = 250)]
     pub polling_rate: u64,
 
@@ -43,19 +49,59 @@ pub struct NotifierConfig {
     pub skipped_apps: Vec<String>, // This will hold the array of strings
 }
 
-impl Default for NotifierConfig {
+impl Default for XSNotifySettings {
     fn default() -> Self {
-        Self {
-            port: 42069,
-            host: "localhost".into(),
-            notification_strategy: NotificationStrategy::Listener,
-            polling_rate: 250,
-            dynamic_timeout: true,
-            default_timeout: 5.0,
-            reading_speed: 238.,
-            min_timeout: 2.,
-            max_timeout: 120.,
-            skipped_apps: Vec::new(), // Initialize to an empty vector
+        fn load_from_file() -> anyhow::Result<XSNotifySettings> {
+            let default_settings = XSNotifySettings {
+                auto_run: true,
+                port: 42069,
+                host: String::from("localhost"),
+                polling_rate: 250,
+                dynamic_timeout: true,
+                default_timeout: 5.0,
+                reading_speed: 238.,
+                min_timeout: 2.,
+                max_timeout: 120.,
+                skipped_apps: Vec::<String>::new(),
+            };
+
+            let config_dir = get_config_dir()?;
+            if !config_dir.exists() {
+                return Ok(default_settings);
+            }
+            let config_file_path = get_config_file_path(config_dir)?;
+
+            if !config_file_path.exists() {
+                return Ok(default_settings);
+            }
+
+            // let contents = fs::read_to_string(&config_file_path)?;
+            let matches = XSNotifySettings::command().get_matches();
+            let result = XSNotifySettings::with_layers(&[
+                Layer::Toml(config_file_path.clone()),
+                Layer::Env(Some("XSNOTIF_".into())),
+                Layer::Clap(matches),
+            ]);
+            match result {
+                Ok(settings) => Ok(settings),
+                Err(_) => {
+                    // If parsing fails, remove the file and write default settings
+                    let _ = fs::remove_file(&config_file_path); // Ignore the result of remove_file
+
+                    // Serialize the default settings to a string
+                    let toml_string = toml::to_string(&XSNotifySettings::default())
+                        .expect("Failed to serialize default settings");
+
+                    // Create a new file and write the default settings to it
+                    let mut file = fs::File::create(config_file_path)?;
+                    file.write_all(toml_string.as_bytes())?;
+
+                    // Return the default settings
+                    Ok(XSNotifySettings::default())
+                }
+            }
         }
+
+        load_from_file().unwrap()
     }
 }

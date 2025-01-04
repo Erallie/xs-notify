@@ -1,7 +1,7 @@
 use anyhow::Context;
 use clap::CommandFactory;
 use colored::Colorize;
-use config::NotifierConfig;
+use config::XSNotifySettings;
 use directories::ProjectDirs;
 use futures::stream::ForEach;
 use iced::{
@@ -101,74 +101,6 @@ async fn main() -> iced::Result {
     iced::run("XS Notify", XSNotify::update, XSNotify::view)
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct XSNotifySettings {
-    auto_run: bool,
-
-    port: usize,
-    host: String,
-    polling_rate: u64,
-
-    dynamic_timeout: bool,
-    default_timeout: f32,
-
-    reading_speed: f32,
-    min_timeout: f32,
-    max_timeout: f32,
-
-    skipped_apps: Vec<String>,
-}
-
-impl Default for XSNotifySettings {
-    fn default() -> Self {
-        fn load_from_file() -> anyhow::Result<XSNotifySettings> {
-            let default_settings = XSNotifySettings {
-                auto_run: true,
-                port: 42069,
-                host: String::from("localhost"),
-                polling_rate: 250,
-                dynamic_timeout: true,
-                default_timeout: 5.0,
-                reading_speed: 238.,
-                min_timeout: 2.,
-                max_timeout: 120.,
-                skipped_apps: Vec::<String>::new(),
-            };
-
-            let config_dir = get_config_dir().unwrap();
-            if !config_dir.exists() {
-                return Ok(default_settings);
-            }
-            let config_file_path = get_config_file_path(config_dir).unwrap();
-
-            if !config_file_path.exists() {
-                return Ok(default_settings);
-            }
-
-            let contents = fs::read_to_string(&config_file_path)?;
-            match toml::from_str::<XSNotifySettings>(&contents) {
-                Ok(settings) => Ok(settings),
-                Err(_) => {
-                    // If parsing fails, remove the file and write default settings
-                    let _ = fs::remove_file(&config_file_path); // Ignore the result of remove_file
-
-                    // Serialize the default settings to a string
-                    let toml_string = toml::to_string(&XSNotifySettings::default())
-                        .expect("Failed to serialize default settings");
-
-                    // Create a new file and write the default settings to it
-                    let mut file = fs::File::create(config_file_path)?;
-                    file.write_all(toml_string.as_bytes())?;
-
-                    // Return the default settings
-                    Ok(XSNotifySettings::default())
-                }
-            }
-        }
-
-        load_from_file().unwrap()
-    }
-}
 
 #[derive(Debug)]
 struct XSNotify {
