@@ -101,6 +101,8 @@ async fn main() -> iced::Result {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct XSNotifySettings {
+    auto_run: bool,
+
     port: usize,
     host: String,
     polling_rate: u64,
@@ -119,6 +121,7 @@ impl Default for XSNotifySettings {
     fn default() -> Self {
         fn load_from_file() -> anyhow::Result<XSNotifySettings> {
             let default_settings = XSNotifySettings {
+                auto_run: true,
                 port: 42069,
                 host: String::from("localhost"),
                 polling_rate: 250,
@@ -170,6 +173,8 @@ impl Default for XSNotify {
 
 #[derive(Debug, Clone)]
 enum Message {
+    SetAutoRun(bool),
+
     SetPort(String),
     SetHost(String),
     SetPollingRate(String),
@@ -213,6 +218,9 @@ impl XSNotify {
     // Load settings from a TOML file
     fn update(&mut self, message: Message) {
         match message {
+            Message::SetAutoRun(value) => {
+                self.settings.auto_run = value;
+            }
             Message::SetPort(value) => {
                 // Allow only digits and empty input
                 if value.is_empty() || value.chars().all(char::is_numeric) {
@@ -321,6 +329,10 @@ impl XSNotify {
     }
 
     fn view(&self) -> Column<Message> {
+        let autorun_checkbox: Checkbox<'_, Message> =
+            checkbox("Auto-run", self.settings.auto_run).on_toggle(Message::SetAutoRun);
+        let autorun = row!["Auto-run", autorun_checkbox];
+
         let port_input: TextInput<'_, Message, Theme, Renderer> =
             text_input("Enter a number...", &self.settings.port.to_string())
                 .on_input(Message::SetPort);
@@ -380,6 +392,7 @@ impl XSNotify {
                 });
         let skipped_apps_row1 = row!["Skipped apps", skipped_apps_input];
         let interface = column![
+            autorun,
             port,
             host,
             polling_rate,
