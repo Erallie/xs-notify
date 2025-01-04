@@ -243,6 +243,7 @@ impl XSNotify {
         let _ = self.save_to_file();
     }
 
+    // Create the user interface
     fn view(&self) -> Column<Message> {
         let autorun_checkbox: Checkbox<'_, Message> =
             checkbox("Auto-run", self.settings.auto_run).on_toggle(Message::SetAutoRun);
