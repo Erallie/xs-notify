@@ -251,7 +251,7 @@ impl XSNotify {
                 self.settings.skipped_apps.retain(|x| *x != value);
             }
         }
-        let _save = &self.save_to_file();
+        let _ = self.save_to_file();
     }
 
     fn view(&self) -> Column<Message> {
