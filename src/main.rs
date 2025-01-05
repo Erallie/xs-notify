@@ -114,6 +114,8 @@ impl Default for XSNotify {
 
 #[derive(Debug, Clone)]
 enum Message {
+    Run(),
+
     SetAutoRun(bool),
     ToggleRun(),
 
@@ -172,11 +174,7 @@ impl XSNotify {
     // Update settings based on the received message
     fn update(&mut self, message: Message) -> Task<Message> {
         match message {
-            Message::SetAutoRun(value) => {
-                self.settings.auto_run = value;
-            }
-            Message::ToggleRun() => {
-                self.running = !self.running;
+            Message::Run() => {
                 if self.running {
                     // Start the task and return a command to handle the result
                     let (tx, mut rx) = mpsc::unbounded_channel();
@@ -218,6 +216,13 @@ impl XSNotify {
 
                     println! {"ended task"};
                 }
+            }
+            Message::SetAutoRun(value) => {
+                self.settings.auto_run = value;
+            }
+            Message::ToggleRun() => {
+                self.running = !self.running;
+                return self.update(Message::Run());
             }
             Message::TaskCompleted(()) => {
                 println!("Completed Task");
