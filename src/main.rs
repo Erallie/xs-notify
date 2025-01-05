@@ -385,44 +385,44 @@ fn settings_update_tests() {
     let mut xs_notify = XSNotify::default();
 
     // Test setting the port
-    xs_notify.update(Message::SetPort(String::from("2000")));
+    let _ = xs_notify.update(Message::SetPort(String::from("2000")));
     assert_eq!(xs_notify.settings.port, 2000);
 
     // Test setting the host
-    xs_notify.update(Message::SetHost(String::from("testing")));
+    let _ = xs_notify.update(Message::SetHost(String::from("testing")));
     assert_eq!(xs_notify.settings.host, String::from("testing"));
 
     // Test setting the polling rate
-    xs_notify.update(Message::SetPollingRate(String::from("100")));
+    let _ = xs_notify.update(Message::SetPollingRate(String::from("100")));
     assert_eq!(xs_notify.settings.polling_rate, 100);
 
     // Test setting dynamic timeout
-    xs_notify.update(Message::SetDynamicTimeout(false));
+    let _ = xs_notify.update(Message::SetDynamicTimeout(false));
     assert_eq!(xs_notify.settings.dynamic_timeout, false);
 
     // Test setting default timeout
-    xs_notify.update(Message::SetDefaultTimeout(String::from("10")));
+    let _ = xs_notify.update(Message::SetDefaultTimeout(String::from("10")));
     assert_eq!(xs_notify.settings.default_timeout, 10.);
 
     // Test setting reading speed
-    xs_notify.update(Message::SetReadingSpeed(String::from("200")));
+    let _ = xs_notify.update(Message::SetReadingSpeed(String::from("200")));
     assert_eq!(xs_notify.settings.reading_speed, 200.);
 
     // Test setting minimum timeout
-    xs_notify.update(Message::SetMinTimeout(String::from("5")));
+    let _ = xs_notify.update(Message::SetMinTimeout(String::from("5")));
     assert_eq!(xs_notify.settings.min_timeout, 5.);
 
     // Test setting maximum timeout
-    xs_notify.update(Message::SetMaxTimeout(String::from("30")));
+    let _ = xs_notify.update(Message::SetMaxTimeout(String::from("30")));
     assert_eq!(xs_notify.settings.max_timeout, 30.);
 
-    xs_notify.update(Message::SetCurrentApp(String::from("VRCX")));
-    xs_notify.update(Message::AddSkippedApp());
-    xs_notify.update(Message::SetCurrentApp(String::from("Discord")));
-    xs_notify.update(Message::AddSkippedApp());
-    xs_notify.update(Message::RemoveSkippedApp(String::from("Discord")));
+    let _ = xs_notify.update(Message::SetCurrentApp(String::from("VRCX")));
+    let _ = xs_notify.update(Message::AddSkippedApp());
+    let _ = xs_notify.update(Message::SetCurrentApp(String::from("Discord")));
+    let _ = xs_notify.update(Message::AddSkippedApp());
+    let _ = xs_notify.update(Message::RemoveSkippedApp(String::from("Discord")));
 
-    assert_eq!(xs_notify.settings.skipped_apps, vec![String::from("VRCX")])
+    assert_eq!(xs_notify.settings.skipped_apps, vec![String::from("VRCX")]);
 }
 
 async fn fetch_latest() -> Result<(), Error> {
