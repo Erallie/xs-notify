@@ -1,6 +1,6 @@
 use anyhow::Result;
 use colored::Colorize;
-use config::XSNotifySettings;
+use config::{get_config_dir, get_config_file_path, XSNotifySettings};
 use directories::ProjectDirs;
 use iced::{
     widget::{
@@ -411,6 +411,13 @@ fn settings_update_tests() {
     let _ = xs_notify.update(Message::RemoveSkippedApp(String::from("Discord")));
 
     assert_eq!(xs_notify.settings.skipped_apps, vec![String::from("VRCX")]);
+}
+
+pub fn get_project_dirs() -> anyhow::Result<ProjectDirs> {
+    let project_dirs = ProjectDirs::from("", "Gozar Productions LLC", "XS Notify")
+        .ok_or_else(|| anyhow::anyhow!("project dir lookup failed"))?;
+
+    Ok(project_dirs)
 }
 
 async fn fetch_latest() -> Result<(), Error> {

@@ -1,9 +1,9 @@
+use crate::get_project_dirs;
 use clap::{CommandFactory, Parser, ValueEnum};
+use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
-use std::{fs, io::Write};
+use std::{fs, io::Write, path::PathBuf};
 use twelf::{config, Layer};
-
-use crate::{get_config_dir, get_config_file_path};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Default, ValueEnum)]
 #[serde(rename_all = "snake_case")]
@@ -104,4 +104,17 @@ impl Default for XSNotifySettings {
 
         load_from_file().unwrap()
     }
+}
+
+pub fn get_config_dir() -> anyhow::Result<PathBuf> {
+    let project_dirs = get_project_dirs()?;
+
+    let config_dir = project_dirs.config_dir();
+
+    Ok(config_dir.to_path_buf())
+}
+
+pub fn get_config_file_path(config_dir: PathBuf) -> anyhow::Result<PathBuf> {
+    let config_file_path = config_dir.join("config.toml");
+    Ok(config_file_path)
 }
