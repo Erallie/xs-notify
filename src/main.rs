@@ -1,31 +1,19 @@
-use anyhow::Context;
-use clap::CommandFactory;
+use anyhow::Result;
 use colored::Colorize;
 use config::XSNotifySettings;
 use directories::ProjectDirs;
-use futures::stream::ForEach;
 use iced::{
     widget::{
-        button, checkbox, column, row, slider, text, text_input, Checkbox, Column, Row, Text,
-        TextInput,
+        button, checkbox, column, row, text_input, Button, Checkbox, Column, Row, Text, TextInput,
     },
-    Application, Center, Element, Renderer, Settings, Task, Theme,
+    Renderer, Task, Theme,
 };
 use notif_handling::notification_listener;
 use reqwest::Error;
 use semver::Version;
-use serde::{Deserialize, Serialize};
-use std::{
-    fs,
-    io::{self, Write},
-    path::{Path, PathBuf},
-};
-use tokio::{
-    fs::{create_dir_all, File},
-    io::AsyncWriteExt,
-    sync::mpsc,
-};
-use twelf::Layer;
+use serde::Deserialize;
+use std::{fs, io::Write, path::PathBuf};
+use tokio::sync::mpsc;
 use xsoverlay::xs_notify;
 
 pub mod config;

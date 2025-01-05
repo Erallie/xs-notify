@@ -1,6 +1,6 @@
 use clap::{CommandFactory, Parser, ValueEnum};
 use serde::{Deserialize, Serialize};
-use std::{fs, io::Write, path::PathBuf};
+use std::{fs, io::Write};
 use twelf::{config, Layer};
 
 use crate::{get_config_dir, get_config_file_path};
