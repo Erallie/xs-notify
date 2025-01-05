@@ -141,20 +141,6 @@ enum Message {
     current_skipped_app: String,
 } */
 
-pub fn get_config_dir() -> anyhow::Result<PathBuf> {
-    let project_dirs = ProjectDirs::from("dev", "Gozar Productions LLC", "XS Notify")
-        .ok_or_else(|| anyhow::anyhow!("project dir lookup failed"))?;
-
-    let config_dir = project_dirs.config_dir();
-
-    Ok(config_dir.to_path_buf())
-}
-
-pub fn get_config_file_path(config_dir: PathBuf) -> anyhow::Result<PathBuf> {
-    let config_file_path = config_dir.join("config.toml");
-    Ok(config_file_path)
-}
-
 impl XSNotify {
     // Save settings to a TOML file
     fn save_to_file(&self) -> anyhow::Result<()> {
