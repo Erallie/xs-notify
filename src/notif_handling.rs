@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::Result;
@@ -21,8 +22,9 @@ use windows::{
     },
 };
 
-use crate::config::{NotificationStrategy, NotifierConfig};
+// use crate::config::{NotificationStrategy, NotifierConfig};
 use crate::xsoverlay::XSOverlayMessage;
+use crate::XSNotifySettings;
 
 /* async fn read_logo(display_info: AppDisplayInfo) -> anyhow::Result<Vec<u8>> {
     let logo_stream = display_info
@@ -61,8 +63,8 @@ fn get_app_name(notif: &UserNotification) -> anyhow::Result<String> {
 }
 
 pub async fn notif_to_message(
-    notif: UserNotification,
-    config: &NotifierConfig,
+    notif: Arc<UserNotification>,
+    config: &XSNotifySettings,
     // max_characters: usize,
 ) -> anyhow::Result<XSOverlayMessage> {
     let app_name = get_app_name(&notif).unwrap();
@@ -196,14 +198,17 @@ pub async fn notif_to_message(
 pub async fn polling_notification_handler(
     listener: UserNotificationListener,
     tx: &UnboundedSender<XSOverlayMessage>,
-    config: &NotifierConfig,
+    config: &XSNotifySettings,
     // max_characters: usize,
 ) -> Result<()> {
     let mut prev_notifs: Option<Vec<UserNotification>> = None;
     loop {
-        let notifs = listener
+        let notifs: Vec<Arc<UserNotification>> = listener
             .GetNotificationsAsync(NotificationKinds::Toast)?
-            .await?;
+            .await?
+            .into_iter()
+            .map(|notif| Arc::new(notif))
+            .collect();
         if let Some(prev_notifs) = prev_notifs {
             for notif in notifs.clone().into_iter().filter(|notif| {
                 prev_notifs
@@ -219,7 +224,7 @@ pub async fn polling_notification_handler(
                 if config.skipped_apps.contains(&app_name) {
                     println!("Skipping notification from {}", app_name);
                 } else {
-                    let msg = notif_to_message(notif, config).await;
+                    let msg = notif_to_message(notif.clone(), config).await;
                     match msg {
                         Ok(msg) => tx.send(msg)?,
                         Err(e) => {
@@ -229,7 +234,12 @@ pub async fn polling_notification_handler(
                 }
             }
         }
-        prev_notifs = Some(notifs.into_iter().collect::<Vec<UserNotification>>());
+        prev_notifs = Some(
+            notifs
+                .into_iter()
+                .map(|this| Arc::unwrap_or_clone(this))
+                .collect::<Vec<UserNotification>>(),
+        );
         sleep(Duration::from_millis(config.polling_rate)).await;
     }
 }
@@ -237,7 +247,7 @@ pub async fn polling_notification_handler(
 pub async fn listening_notification_handler(
     listener: UserNotificationListener,
     tx: &UnboundedSender<XSOverlayMessage>,
-    config: &NotifierConfig,
+    config: &XSNotifySettings,
     // max_characters: usize,
 ) -> Result<()> {
     let (new_notif_tx, mut new_notif_rx) = unbounded_channel::<u32>();
@@ -263,11 +273,13 @@ pub async fn listening_notification_handler(
                 .GetNotification(notif_id)
                 .context(format!("Failed to get notification {notif_id}"))?;
 
-            let app_name = get_app_name(&notif).unwrap();
+            let notif_arc = Arc::new(notif.clone());
+
+            let app_name = get_app_name(&notif_arc).unwrap();
             if config.skipped_apps.contains(&app_name) {
                 println!("Skipping notification from {}", app_name);
             } else {
-                let msg = notif_to_message(notif, config).await;
+                let msg = notif_to_message(notif_arc.clone(), config).await;
                 match msg {
                     Ok(msg) => tx.send(msg)?,
                     Err(e) => println!("Failed to convert notification to XSOverlay message: {e}"),
@@ -284,7 +296,7 @@ pub async fn listening_notification_handler(
 }
 
 pub async fn notification_listener(
-    config: &NotifierConfig,
+    config: &XSNotifySettings,
     tx: &UnboundedSender<XSOverlayMessage>,
 ) -> anyhow::Result<()> {
     let listener = UserNotificationListener::Current()
@@ -302,12 +314,7 @@ pub async fn notification_listener(
         ));
     }
     info!("Notification access granted");
-    match config.notification_strategy {
-        NotificationStrategy::Listener => {
-            listening_notification_handler(listener, tx, config).await
-        }
-        NotificationStrategy::Polling => polling_notification_handler(listener, tx, config).await,
-    }
+    polling_notification_handler(listener, tx, config).await
 }
 
 /* async fn read_stream_to_bytes(
