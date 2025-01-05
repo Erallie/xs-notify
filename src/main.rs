@@ -107,13 +107,16 @@ async fn main() -> iced::Result {
 struct XSNotify {
     settings: XSNotifySettings,
     current_skipped_app: String,
+    running: bool,
 }
 
 impl Default for XSNotify {
     fn default() -> Self {
+        let settings = XSNotifySettings::default();
         XSNotify {
-            settings: XSNotifySettings::default(),
+            settings: settings.clone(),
             current_skipped_app: String::new(),
+            running: settings.auto_run,
         }
     }
 }
@@ -121,6 +124,7 @@ impl Default for XSNotify {
 #[derive(Debug, Clone)]
 enum Message {
     SetAutoRun(bool),
+    ToggleRun(),
 
     SetPort(String),
     SetHost(String),
@@ -143,7 +147,7 @@ enum Message {
     current_skipped_app: String,
 } */
 
-fn get_config_dir() -> anyhow::Result<PathBuf> {
+pub fn get_config_dir() -> anyhow::Result<PathBuf> {
     let project_dirs = ProjectDirs::from("dev", "Gozar Productions LLC", "XS Notify")
         .ok_or_else(|| anyhow::anyhow!("project dir lookup failed"))?;
 
@@ -152,7 +156,7 @@ fn get_config_dir() -> anyhow::Result<PathBuf> {
     Ok(config_dir.to_path_buf())
 }
 
-fn get_config_file_path(config_dir: PathBuf) -> anyhow::Result<PathBuf> {
+pub fn get_config_file_path(config_dir: PathBuf) -> anyhow::Result<PathBuf> {
     let config_file_path = config_dir.join("config.toml");
     Ok(config_file_path)
 }
@@ -173,11 +177,19 @@ impl XSNotify {
         Ok(())
     }
 
-    // Load settings from a TOML file
-    fn update(&mut self, message: Message) {
+    // Update settings based on the received message
+    fn update(&mut self, message: Message) -> Task<Message> {
         match message {
             Message::SetAutoRun(value) => {
                 self.settings.auto_run = value;
+            }
+            Message::ToggleRun() => {
+                self.running = !self.running;
+                if self.running {
+                    println!("Starting task");
+                } else {
+                    println! {"ended task"};
+                }
             }
             Message::SetPort(value) => {
                 if value.is_empty() || value.chars().all(char::is_numeric) {
@@ -301,6 +313,10 @@ impl XSNotify {
                 });
         let skipped_apps_row1 = row!["Skipped apps", skipped_apps_input, skipped_apps_add];
 
+        let button_content = if self.running { "Stop" } else { "Start" };
+
+        let run_button: Button<'_, Message> = button(button_content).on_press(Message::ToggleRun());
+
         let interface = column![
             autorun,
             port,
@@ -312,7 +328,8 @@ impl XSNotify {
             min_timeout,
             max_timeout,
             skipped_apps_row1,
-            skipped_apps_row2
+            skipped_apps_row2,
+            run_button
         ];
 
         interface
