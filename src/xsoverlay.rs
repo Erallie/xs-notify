@@ -48,7 +48,7 @@ async fn connect_udp(host: &String, port: usize) -> anyhow::Result<UdpSocket> {
 
 pub async fn xs_notify(
     rx: &mut mpsc::UnboundedReceiver<XSOverlayMessage>,
-    host: &String,
+    host: String,
     port: usize,
 ) -> anyhow::Result<()> {
     let socket = connect_udp(&host, port).await?;

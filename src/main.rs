@@ -9,7 +9,7 @@ use iced::{
         button, checkbox, column, row, slider, text, text_input, Checkbox, Column, Row, Text,
         TextInput,
     },
-    Application, Center, Element, Renderer, Settings, Theme,
+    Application, Center, Element, Renderer, Settings, Task, Theme,
 };
 use notif_handling::notification_listener;
 use reqwest::Error;
@@ -103,20 +103,23 @@ async fn main() -> iced::Result {
 }
 
 
-#[derive(Debug)]
+// #[derive(Debug)]
 struct XSNotify {
     settings: XSNotifySettings,
     current_skipped_app: String,
     running: bool,
+    handle: iced::task::Handle,
 }
 
 impl Default for XSNotify {
     fn default() -> Self {
         let settings = XSNotifySettings::default();
+        let no_task: (Task<Message>, iced::task::Handle) = Task::none().abortable();
         XSNotify {
             settings: settings.clone(),
             current_skipped_app: String::new(),
             running: settings.auto_run,
+            handle: no_task.1,
         }
     }
 }
@@ -126,6 +129,7 @@ enum Message {
     SetAutoRun(bool),
     ToggleRun(),
 
+    TaskCompleted(()),
     SetPort(String),
     SetHost(String),
     SetPollingRate(String),
@@ -186,10 +190,49 @@ impl XSNotify {
             Message::ToggleRun() => {
                 self.running = !self.running;
                 if self.running {
+                    // Start the task and return a command to handle the result
+                    let (tx, mut rx) = mpsc::unbounded_channel();
+                    let settings = self.settings.clone();
+                    let host = settings.host.clone();
+                    let task_socket = async move {
+                        loop {
+                            let res = xs_notify(&mut rx, host.clone(), settings.port.clone()).await;
+                            log::error!(
+                                    "XSOverlay notification sender died unexpectedly: {:?}, restarting sender",
+                                    res
+                                );
+                        }
+                    };
+
+                    let task_log = async move {
+                        loop {
+                            let res = notification_listener(&settings, &tx).await;
+                            log::error!(
+                                "Windows notification listener died unexpectedly: {:?}",
+                                res
+                            );
+                        }
+                    };
+
+                    let task = Task::batch(vec![
+                        Task::perform(task_socket, Message::TaskCompleted),
+                        Task::perform(task_log, Message::TaskCompleted),
+                    ])
+                    .abortable();
+
+                    self.handle = task.1;
+
                     println!("Starting task");
+
+                    return task.0;
                 } else {
+                    self.handle.abort();
+
                     println! {"ended task"};
                 }
+            }
+            Message::TaskCompleted(()) => {
+                println!("Completed Task");
             }
             Message::SetPort(value) => {
                 if value.is_empty() || value.chars().all(char::is_numeric) {
@@ -253,6 +296,7 @@ impl XSNotify {
             }
         }
         let _ = self.save_to_file();
+        Task::none()
     }
 
     // Create the user interface
