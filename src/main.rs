@@ -90,8 +90,7 @@ async fn main() -> iced::Result {
     iced::run("XS Notify", XSNotify::update, XSNotify::view)
 }
 
-
-// #[derive(Debug)]
+#[derive(Debug, Clone)]
 struct XSNotify {
     settings: XSNotifySettings,
     current_skipped_app: String,
