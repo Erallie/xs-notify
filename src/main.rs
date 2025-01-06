@@ -1,5 +1,3 @@
-use anyhow::Result;
-use colored::Colorize;
 use config::{get_config_dir, get_config_file_path, XSNotifySettings};
 use directories::ProjectDirs;
 use iced::{
@@ -13,45 +11,65 @@ use iced::{
     Padding, Renderer, Size, Task, Theme,
 };
 use notif_handling::notification_listener;
-use reqwest::Error;
-use semver::Version;
-use serde::Deserialize;
 use std::{fs, io::Write, path::PathBuf};
 use tokio::sync::mpsc;
+use update::{fetch_latest, LatestResult, Update};
 use xsoverlay::xs_notify;
 
 pub mod config;
 pub mod notif_handling;
+pub mod update;
 pub mod xsoverlay;
 
-#[derive(Deserialize)]
-struct Release {
-    tag_name: String,
-}
 // Entry point of the application
 #[tokio::main]
 async fn main() -> iced::Result {
-    // Call fetch_latest and handle the result
-    /* match fetch_latest().await {
-        Ok(_) => {
-            // Successfully fetched the latest version
-        }
+    // iced::run("XS Notify Updater", Update::update, Update::view)
+    /* let is_installed = install().await;
+    match is_installed {
+        Ok(_result) => (),
         Err(e) => {
-            // Print the error and continue
-            eprintln!("Error fetching the latest version: {}", e);
+            eprintln!("Failed to install files: {e}")
         }
     } */
-    // iced::run("XS Notify Updater", Update::update, Update::view)
-    // let _is_installed_ = install;
+
+    let result = fetch_latest().await;
+
+    match result {
+        Ok(res) => {
+            if res.value {
+                iced::application("XS Notify", XSNotify::update, XSNotify::view)
+                    .window_size(Size::new(600., 600.))
+                    /* .exit_on_close_request(false) */
+                    .run_with(|| {
+                        let mut default = XSNotify::default();
+                        let task = default.update(Message::Run());
+                        (default, task)
+                    })
+            } else {
+                iced::application("XS Notify Updater", Update::update, Update::view).run_with(
+                    || {
+                        let mut default = Update::default();
+                        default.url = res.download_link;
+                        (default, Task::none())
+                    },
+                )
+            }
+        }
+        Err(e) => {
+            eprintln!("Error getting latest version: {e}");
+            iced::application("XS Notify", XSNotify::update, XSNotify::view)
+                .window_size(Size::new(600., 600.))
+                /* .exit_on_close_request(false) */
+                .run_with(|| {
+                    let mut default = XSNotify::default();
+                    let task = default.update(Message::Run());
+                    (default, task)
+                })
+        }
+    }
 
     // iced::run("XS Notify", XSNotify::update, XSNotify::view);
-    iced::application("XS Notify", XSNotify::update, XSNotify::view)
-        .window_size(Size::new(600., 800.))
-        .run_with(|| {
-            let mut default = XSNotify::default();
-            let task = default.update(Message::Run());
-            (default, task)
-        })
 }
 
 #[derive(Debug, Clone)]
@@ -520,50 +538,4 @@ pub fn get_project_dirs() -> anyhow::Result<ProjectDirs> {
         .ok_or_else(|| anyhow::anyhow!("project dir lookup failed"))?;
 
     Ok(project_dirs)
-}
-
-async fn fetch_latest() -> Result<(), Error> {
-    // Replace with your GitHub username and repository
-    let username = "Erallie";
-    let repository = "xs-notify";
-    let current_version = "1.0.2"; // Replace with your current version
-
-    // Fetch the latest release from GitHub
-    let url = format!(
-        "https://api.github.com/repos/{}/{}/releases/latest",
-        username, repository
-    );
-    let client = reqwest::Client::new();
-    let response = client
-        .get(&url)
-        .header("User-Agent", "reqwest")
-        .send()
-        .await?
-        .json::<Release>()
-        .await?;
-
-    // Compare versions
-    let latest_version = &response.tag_name[1..]; // Remove the 'v' prefix
-    if let Ok(latest) = Version::parse(latest_version) {
-        if let Ok(current) = Version::parse(current_version) {
-            if latest > current {
-                let current_formatted = format!("v{}", current);
-                let latest_formatted = format!("v{}", latest);
-                let download_link = format!(
-                    "https://github.com/{}/{}/releases/tag/v{}",
-                    username, repository, latest
-                );
-                println!("Current version: {}\n\n{} is available: {}\nCtrl + click the following link to download it: {}\n", current_formatted.blue(), "A NEW VERSION".purple().italic(), latest_formatted.bright_blue(), download_link.bright_cyan());
-            } else {
-                let this_formatted = format!("v{}", current);
-                println!("You are on the latest version: {}\n", this_formatted.blue());
-            }
-        } else {
-            eprintln!("Invalid current version format: {}", current_version);
-        }
-    } else {
-        eprintln!("Invalid latest version format: {}", latest_version);
-    }
-
-    Ok(())
 }
