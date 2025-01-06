@@ -152,9 +152,9 @@ impl XSNotify {
                         loop {
                             let res = xs_notify(&mut rx, host.clone(), settings.port.clone()).await;
                             log::error!(
-                                    "XSOverlay notification sender died unexpectedly: {:?}, restarting sender",
-                                    res
-                                );
+                                "XSOverlay notification sender died unexpectedly: {:?}, restarting sender",
+                                res
+                            );
                         }
                     };
 
