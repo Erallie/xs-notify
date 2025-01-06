@@ -37,15 +37,16 @@ async fn main() -> iced::Result {
             eprintln!("Error fetching the latest version: {}", e);
         }
     } */
+    // iced::run("XS Notify Updater", Update::update, Update::view)
+    // let _is_installed_ = install;
 
-    // let interface = MyApp.view();
-
-    // Now start the main application
-    // start().await
-
-    // let mut settings = XSNotifySettings::default();
-
-    iced::run("XS Notify", XSNotify::update, XSNotify::view)
+    // iced::run("XS Notify", XSNotify::update, XSNotify::view);
+    iced::application("XS Notify", XSNotify::update, XSNotify::view)
+        .run_with(|| {
+            let mut default = XSNotify::default();
+            let task = default.update(Message::Run());
+            (default, task)
+        })
 }
 
 #[derive(Debug, Clone)]
@@ -59,11 +60,12 @@ struct XSNotify {
 impl Default for XSNotify {
     fn default() -> Self {
         let settings = XSNotifySettings::default();
+        let auto_run = settings.auto_run;
         let no_task: (Task<Message>, iced::task::Handle) = Task::none().abortable();
         XSNotify {
-            settings: settings.clone(),
+            settings,
             current_skipped_app: String::new(),
-            running: settings.auto_run,
+            running: auto_run,
             handle: no_task.1,
         }
     }
