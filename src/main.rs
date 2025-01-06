@@ -3,8 +3,8 @@ use directories::ProjectDirs;
 use iced::{
     alignment::{Horizontal, Vertical},
     widget::{
-        button, checkbox, column, container, row, scrollable, svg, text, text_input, toggler,
-        Button, Column, Row, Svg, TextInput, Toggler,
+        button, column, container, row, scrollable, svg, text, text_input, toggler, Button, Column,
+        Row, Svg, TextInput, Toggler,
     },
     Element,
     Length::{Fill, Shrink},
