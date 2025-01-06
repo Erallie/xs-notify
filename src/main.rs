@@ -118,11 +118,6 @@ enum Message {
     RemoveSkippedApp(String),
 }
 
-/* struct Interface {
-    settings: XSNotifySettings,
-    current_skipped_app: String,
-} */
-
 impl XSNotify {
     // Save settings to a TOML file
     fn save_to_file(&self) -> anyhow::Result<()> {

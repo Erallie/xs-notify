@@ -1,6 +1,5 @@
 use crate::get_project_dirs;
 use clap::{CommandFactory, Parser, ValueEnum};
-use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use std::{fs, io::Write, path::PathBuf};
 use twelf::{config, Layer};
