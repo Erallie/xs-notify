@@ -373,9 +373,26 @@ impl XSNotify {
             text("Skipped apps").size(title_font_size),
             text("If there are apps you don't want XS Notify to push notifications for, add their names here.").size(description_font_size)
         ].width(title_width);
-        let skipped_apps_add: Button<'_, Message> =
-            button("Add").on_press(Message::AddSkippedApp());
-        let skipped_apps_input_joined = row![skipped_apps_input, skipped_apps_add];
+        // let plus_svg_handle = svg::Handle::from_path(self.images_path.join("plus.svg"));
+        let plus_svg_handle = svg::Handle::from_memory(
+            "<svg height=\"21\" width=\"21\" xmlns=\"http://www.w3.org/2000/svg\">
+        <g stroke=\"white\" stroke-width=\"4\" stroke-linecap=\"round\">
+            <line x1=\"2\" y1=\"10\" x2=\"19\" y2=\"10\" />
+            <line x1=\"10\" y1=\"2\" x2=\"10\" y2=\"19\" />
+        </g>
+        X
+    </svg>"
+                .as_bytes(),
+        );
+        let plus_svg: Svg<'_> = svg(plus_svg_handle).width(Fill).height(Fill);
+        let skipped_apps_add: Button<'_, Message> = button(plus_svg)
+            .on_press(Message::AddSkippedApp())
+            .height(28)
+            .width(28)
+            .padding(4);
+        let skipped_apps_input_joined = row![skipped_apps_input, skipped_apps_add]
+            .align_y(Vertical::Center)
+            .spacing(6);
         let skipped_apps_row1 = row![
             skipped_apps_title,
             skipped_apps_input_joined.width(input_width)
@@ -386,9 +403,16 @@ impl XSNotify {
         let skipped_apps_row2 = self.settings.skipped_apps.iter().fold(
             Row::new().spacing(8).align_y(setting_vertical_align),
             |row: Row<'_, Message>, item| {
-                let x_svg_handle = svg::Handle::from_path(
-                    "C:\\Users\\EDSGo\\Documents\\Forks\\xsoverlay-notifier\\src\\images\\X.svg",
-                    // "images\\X.svg",
+                // let x_svg_handle = svg::Handle::from_path(self.images_path.join("x.svg"));
+                let x_svg_handle = svg::Handle::from_memory(
+                    "<svg height=\"20\" width=\"20\" xmlns=\"http://www.w3.org/2000/svg\">
+            <g stroke=\"white\" stroke-width=\"4\" stroke-linecap=\"round\">
+                <line x1=\"2\" y1=\"2\" x2=\"18\" y2=\"18\" />
+                <line x1=\"18\" y1=\"2\" x2=\"2\" y2=\"18\" />
+            </g>
+            X
+        </svg>"
+                        .as_bytes(),
                 );
                 let x_svg: Svg<'_> = svg(x_svg_handle).width(12).height(12);
                 row.push(
