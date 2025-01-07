@@ -47,13 +47,14 @@ async fn main() -> iced::Result {
                         (default, task)
                     })
             } else {
-                iced::application("XS Notify Updater", Update::update, Update::view).run_with(
-                    || {
+                iced::application("XS Notify Updater", Update::update, Update::view)
+                    .window_size(Size::new(400., 300.))
+                    .run_with(|| {
                         let mut default = Update::default();
-                        default.url = res.download_link;
+                        default.build_url = res.build_link;
+                        default.exe_url = res.exe_link;
                         (default, Task::none())
-                    },
-                )
+                    })
             }
         }
         Err(e) => {

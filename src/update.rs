@@ -5,18 +5,19 @@ use colored::Colorize;
 use iced::{
     alignment::{Horizontal, Vertical},
     executor,
-    widget::{button, column, row},
+    widget::{button, column, row, text, Column},
     Element, Executor, Settings, Task,
 };
 use reqwest::{Error, Response};
 use semver::Version;
 use serde::Deserialize;
-use std::{fmt, fs, io, path::PathBuf, process::Command as ProcessCommand, string::FromUtf8Error};
+use std::{fmt, fs, io, path::PathBuf, process::Command, string::FromUtf8Error};
 use tokio::{
     fs::{self as async_fs, File},
     io::AsyncWriteExt,
     runtime::Runtime,
 };
+use webbrowser;
 
 // Entry point of the application
 /* #[tokio::main]
@@ -55,20 +56,23 @@ async fn main() -> iced::Result {
 
 #[derive(Debug, Clone)]
 pub struct Update {
-    pub url: String,
+    pub build_url: String,
+    pub exe_url: String,
     exe_path: PathBuf,
     downloading: bool,
 }
 
 impl Default for Update {
     fn default() -> Self {
-        let url = String::new();
         let project_dirs = get_project_dirs().unwrap();
-        let exe_path = project_dirs.data_dir().join("xs_notify.exe");
+        let exe_path = project_dirs
+            .data_dir()
+            .join(env!("CARGO_PKG_NAME").to_string() + ".exe");
         // let config_file_path = println!("exe_path: {}", exe_path.to_string_lossy());
 
         Update {
-            url,
+            build_url: String::new(),
+            exe_url: String::new(),
             exe_path,
             downloading: false,
         }
@@ -78,8 +82,8 @@ impl Default for Update {
 #[derive(Debug, Clone)]
 pub enum Message {
     Update,
-    NotNow,
     DownloadComplete,
+    RunMain,
 }
 
 impl Update {
@@ -97,13 +101,15 @@ impl Update {
                 // Use tokio to download the file
                 let download_future = async move {
                     let response: Response;
-                    match reqwest::get(this_self.url).await {
+                    let url = this_self.exe_url;
+                    println!("url: {}", url);
+                    match reqwest::get(url).await {
                         Ok(res) => {
                             response = res;
                         }
                         Err(e) => {
                             eprintln!("Error downloading file: {}", e);
-                            return Message::NotNow;
+                            return Message::RunMain;
                         }
                     }
                     let bytes: Bytes;
@@ -113,42 +119,68 @@ impl Update {
                         }
                         Err(e) => {
                             eprintln!("Error downloading file: {}", e);
-                            return Message::NotNow;
+                            return Message::RunMain;
                         }
                     };
                     let mut file: File;
-                    match async_fs::File::create("temporary.exe").await {
+                    match async_fs::File::create("xs_notify.temp").await {
                         Ok(f) => {
                             file = f;
                         }
                         Err(e) => {
                             eprintln!("Error downloading file: {}", e);
-                            return Message::NotNow;
+                            return Message::RunMain;
                         }
                     };
-                    file.write_all(&bytes).await.unwrap();
+                    file.write_all(&bytes)
+                        .await
+                        .expect("Failed to write data to xs_notify.temp");
+
                     Message::DownloadComplete
                 };
 
                 return Task::perform(download_future, |result| result);
             }
             Message::DownloadComplete => {
-                // Replace the current executable with the new one
-                let current_executable = std::env::current_exe()
-                    .expect("Failed to get the path of the current executable.");
-                let new_executable = PathBuf::from("temporary.exe");
+                // Hardcoded PowerShell script
+                let script_content = r#"
+                $tempFilePath = "xs_notify.temp"
+                $exePath = "xs_notify.exe"
+                # Get the path of the currently running script
+                $currentScriptPath = $MyInvocation.MyCommand.Path
+                
+                Start-Sleep -Seconds 1
 
-                // Replace the current executable
-                fs::copy(&new_executable, &current_executable)
-                    .expect("Failed to copy the temporary executable to the current executable.");
-                fs::remove_file("temporary.exe").expect("Failed to remove temporary executable.");
-                // Start the new executable
-                ProcessCommand::new(&current_executable)
-                    .spawn()
-                    .expect("Failed to start new executable");
-                iced::exit() // Exit the current process
+                # Check if the file exists
+                if (Test-Path $tempFilePath) {
+                    # Remove the file
+                    Copy-Item $tempFilePath $exePath
+                    Remove-Item $tempFilePath -Force
+                    Start-Process -FilePath $exePath
+                    # Remove the script file
+                    Remove-Item -Path $currentScriptPath -Force
+                    exit
+                } else {
+                    Write-Host "File does not exist."
+                }
+                "#;
+
+                // Create a temporary PowerShell script file
+                let temp_script_path = "xs_notify_update.ps1";
+                std::fs::write(temp_script_path, script_content)
+                    .expect("Failed to write update script file");
+
+                // Execute the PowerShell script
+                let _ = Command::new("powershell")
+                    .arg("-ExecutionPolicy")
+                    .arg("Bypass") // Bypass execution policy for the script
+                    .arg("-File")
+                    .arg(temp_script_path)
+                    .spawn();
+
+                iced::exit()
             }
-            Message::NotNow => {
+            Message::RunMain => {
                 /* Task::batch(vec![
                     iced::exit(),
                     iced::run("XS Notify", XSNotify::update, XSNotify::view),
@@ -160,7 +192,7 @@ impl Update {
 
     pub fn view(&self) -> Element<Message> {
         let update_button = button("Update").on_press(Message::Update);
-        let not_now_button = button("Not now").on_press(Message::NotNow);
+        let not_now_button = button("Not now").on_press(Message::RunMain);
 
         let options = row![not_now_button, update_button];
 
@@ -184,7 +216,8 @@ struct Release {
 #[derive(Debug, Clone)]
 pub struct LatestResult {
     pub value: bool,
-    pub download_link: String,
+    pub build_link: String,
+    pub exe_link: String,
 }
 
 #[derive(Debug)]
@@ -242,6 +275,7 @@ pub async fn fetch_latest() -> Result<LatestResult, LatestError> {
     // Replace with your GitHub username and repository
     let username = "Erallie";
     let repository = "xs-notify";
+    let exe_filename = env!("CARGO_PKG_NAME").to_string() + ".exe";
     let current_version = env!("CARGO_PKG_VERSION"); // Replace with your current version
 
     // Fetch the latest release from GitHub
@@ -269,17 +303,23 @@ pub async fn fetch_latest() -> Result<LatestResult, LatestError> {
                     "https://github.com/{}/{}/releases/tag/v{}",
                     username, repository, latest
                 );
+                let exe_link = format!(
+                    "https://github.com/{}/{}/releases/download/v{}/{}",
+                    username, repository, latest, exe_filename
+                );
                 println!("Current version: {}\n\n{} is available: {}\nCtrl + click the following link to download it: {}\n", current_formatted.blue(), "A NEW VERSION".purple().italic(), latest_formatted.bright_blue(), download_link.bright_cyan());
                 return Ok(LatestResult {
                     value: false,
-                    download_link,
+                    build_link: download_link,
+                    exe_link,
                 });
             } else {
                 let this_formatted = format!("v{}", current);
                 println!("You are on the latest version: {}\n", this_formatted.blue());
                 return Ok(LatestResult {
                     value: true,
-                    download_link: String::new(),
+                    build_link: String::new(),
+                    exe_link: String::new(),
                 });
             }
         } else {
