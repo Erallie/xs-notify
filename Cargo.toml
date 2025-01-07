@@ -1,6 +1,6 @@
 [package]
-name = "xs_notify"
 version = "1.0.2"
+name = "XSNotify"
 edition = "2021"
 authors = ["Gozar Productions", "blusk"]
 readme = "README.md"
