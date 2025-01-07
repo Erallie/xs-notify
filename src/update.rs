@@ -56,6 +56,7 @@ async fn main() -> iced::Result {
 
 #[derive(Debug, Clone)]
 pub struct Update {
+    app_name: String,
     pub build_url: String,
     pub exe_url: String,
     exe_path: PathBuf,
@@ -65,12 +66,14 @@ pub struct Update {
 impl Default for Update {
     fn default() -> Self {
         let project_dirs = get_project_dirs().unwrap();
+        let app_name = env!("CARGO_PKG_NAME").to_string();
         let exe_path = project_dirs
             .data_dir()
-            .join(env!("CARGO_PKG_NAME").to_string() + ".exe");
+            .join(app_name.clone().to_owned() + ".exe");
         // let config_file_path = println!("exe_path: {}", exe_path.to_string_lossy());
 
         Update {
+            app_name,
             build_url: String::new(),
             exe_url: String::new(),
             exe_path,
@@ -98,6 +101,8 @@ impl Update {
                 // Start the download in a separate task
 
                 let this_self = self.clone();
+
+                let temp_file_name = this_self.app_name.clone().to_owned() + ".temp";
                 // Use tokio to download the file
                 let download_future = async move {
                     let response: Response;
@@ -123,7 +128,7 @@ impl Update {
                         }
                     };
                     let mut file: File;
-                    match async_fs::File::create("xs_notify.temp").await {
+                    match async_fs::File::create(temp_file_name.clone()).await {
                         Ok(f) => {
                             file = f;
                         }
@@ -134,7 +139,7 @@ impl Update {
                     };
                     file.write_all(&bytes)
                         .await
-                        .expect("Failed to write data to xs_notify.temp");
+                        .expect(format!("Failed to write data to {}", temp_file_name).as_str());
 
                     Message::DownloadComplete
                 };
@@ -142,32 +147,37 @@ impl Update {
                 return Task::perform(download_future, |result| result);
             }
             Message::DownloadComplete => {
+                let exe_name = self.app_name.clone().to_owned() + ".exe";
+                let temp_file_name = self.app_name.clone().to_owned() + ".temp";
                 // Hardcoded PowerShell script
                 let script_content = r#"
-                $tempFilePath = "xs_notify.temp"
-                $exePath = "xs_notify.exe"
-                # Get the path of the currently running script
-                $currentScriptPath = $MyInvocation.MyCommand.Path
-                
-                Start-Sleep -Seconds 1
+param(
+    [string]$TempFilePath,
+    [string]$ExePath
+)
 
-                # Check if the file exists
-                if (Test-Path $tempFilePath) {
-                    # Remove the file
-                    Copy-Item $tempFilePath $exePath
-                    Remove-Item $tempFilePath -Force
-                    Start-Process -FilePath $exePath
-                    # Remove the script file
-                    Remove-Item -Path $currentScriptPath -Force
-                    exit
-                } else {
-                    Write-Host "File does not exist."
-                }
+# Get the path of the currently running script
+$currentScriptPath = $MyInvocation.MyCommand.Path
+
+Start-Sleep -Seconds 1
+
+# Check if the file exists
+if (Test-Path $TempFilePath) {
+    # Remove the file
+    Copy-Item $TempFilePath $ExePath
+    Remove-Item $TempFilePath -Force
+    Start-Process -FilePath $ExePath
+    # Remove the script file
+    Remove-Item -Path $currentScriptPath -Force
+    exit
+} else {
+    Write-Host "File does not exist."
+}
                 "#;
 
                 // Create a temporary PowerShell script file
-                let temp_script_path = "xs_notify_update.ps1";
-                std::fs::write(temp_script_path, script_content)
+                let temp_script_path = self.app_name.clone().to_owned() + "Update.ps1";
+                std::fs::write(temp_script_path.clone(), script_content)
                     .expect("Failed to write update script file");
 
                 // Execute the PowerShell script
@@ -176,6 +186,10 @@ impl Update {
                     .arg("Bypass") // Bypass execution policy for the script
                     .arg("-File")
                     .arg(temp_script_path)
+                    .arg("-TempFilePath")
+                    .arg(temp_file_name)
+                    .arg("-ExePath")
+                    .arg(exe_name)
                     .spawn();
 
                 iced::exit()
