@@ -194,13 +194,25 @@ impl Update {
         let update_button = button("Update").on_press(Message::Update);
         let not_now_button = button("Not now").on_press(Message::RunMain);
 
-        let options = row![not_now_button, update_button];
+        let options = row![not_now_button, update_button].spacing(4);
+
+        let download_text: Column<'_, Message> = column![
+            text("Download it at:").size(16),
+            text(self.build_url.as_str()).size(16)
+        ]
+        .align_x(Horizontal::Center);
+
+        let full_info: Column<'_, Message> =
+            column![text("A new version is available!").size(20), download_text]
+                .spacing(8)
+                .align_x(Horizontal::Center);
 
         let content = if self.downloading {
             "Downloading new version...".into()
         } else {
-            let column =
-                column!["A new version is available!", options].align_x(Horizontal::Center);
+            let column = column![full_info, options]
+                .spacing(12)
+                .align_x(Horizontal::Center);
             column.into()
         };
 
