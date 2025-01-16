@@ -15,7 +15,8 @@
                 "label": "main",
                 "title": "XS Notify",
                 "width": 800,
-                "height": 600
+                "height": 600,
+                "resizable": false
             },
             {
                 "label": "update",
