@@ -1,7 +1,7 @@
 [package]
 name = "xs-notify"
 version = "1.0.3"
-description = "A Tauri App"
+description = "Sends all windows notifications to XSOverlay"
 authors = ["Erika Gozar", "blusk", "Zelaf", "Jakob"]
 repository = "https://github.com/Erallie/xs-notify"
 edition = "2021"
