@@ -97,7 +97,8 @@ export type SettingSection = {
 }
 
 export type Logs = {
+    info: string;
     msg: string;
-    level: number;
+    cls: string;
     extraClasses?: string;
 }

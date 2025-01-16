@@ -32,69 +32,6 @@
         // console.error("testing");
         // console.log(`isRunning = ${isRunning}`);
     });
-
-    // with TargetKind::Webview enabled this function will print logs to the browser console
-
-    let detachLogger: () => void;
-    // Use $effect to handle side effects
-    $effect(() => {
-        // Create an async function to handle the logger attachment
-        const attachLoggerAsync = async () => {
-            detachLogger = await attachLogger((value) => {
-                addToConsole(value.message, value.level);
-            });
-        };
-
-        // Call the async function
-        attachLoggerAsync();
-
-        // Cleanup function to detach the logger
-        return () => {
-            if (detachLogger) {
-                detachLogger();
-            }
-        };
-    });
-
-    let logElement: Logs[] = $state([]);
-    setContext("logElement", logElement);
-
-    function addToConsole(message: string, level: number) {
-        let consoleEl = document.getElementById("console-el");
-
-        let isAtBottom = false;
-        if (
-            consoleEl &&
-            consoleEl.scrollTop >=
-                consoleEl.scrollHeight - consoleEl.clientHeight * 1.5
-        ) {
-            isAtBottom = true;
-        }
-        let cls = "text-gray-500";
-        let extraClasses;
-        switch (level) {
-            case 5:
-                cls = "text-red-900";
-                extraClasses = "bg-warning text-warning-content";
-                break;
-            case 4:
-                cls = "text-orange-900";
-                extraClasses = "bg-orange-400 text-warning-content";
-                break;
-        }
-        let newMsg = message.replace(
-            /^(\[.+\]) (.+)$/gm,
-            `<span class="${cls}">$1</span><br>$2`,
-        );
-        logElement.push({
-            msg: newMsg,
-            level: level,
-            extraClasses: extraClasses,
-        });
-        if (isAtBottom) {
-            consoleEl!.scrollTop = consoleEl!.scrollHeight;
-        }
-    }
 </script>
 
 <main class="drawer lg:drawer-open">
