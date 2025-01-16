@@ -104,7 +104,7 @@
 
         <label
             for="my-drawer"
-            class="btn drawer-button lg:hidden absolute top-6 left-8"
+            class="btn drawer-button lg:hidden fixed top-6 left-8 btn-neutral"
         >
             <svg
                 height="21"
