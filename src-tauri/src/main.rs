@@ -7,6 +7,7 @@ use notif_handling::notification_listener;
 use std::{
     fs,
     path::PathBuf,
+    str::FromStr,
     sync::{Arc, Mutex, MutexGuard},
 };
 use tauri::{
