@@ -333,16 +333,16 @@ async fn run_socket(cancel: Arc<Notify>, mut rx: UnboundedReceiver<XSOverlayMess
     loop {
         tokio::select! {
             _ = cancel.notified() => {
-                log::info!("Socket task was cancelled.");
+                log::info!("Bridge socket was closed.");
                 break;
             }
             // Simulate work
             _ = async {
                 let res = xs_notify(&mut rx, &host, port).await;
                 log::error!(
-                    "XSOverlay notification sender died unexpectedly: {:?}, restarting sender",
+                    "XSOverlay notification sender died unexpectedly: {:?}",
                     res
-                );
+                ); //This one previously had "restarting sender"
                 return;
                 // log::info!("Working...");
             } => {}
@@ -354,13 +354,13 @@ async fn run_log(cancel: Arc<Notify>, settings: XSNotifySettings, mut tx: Unboun
     loop {
         tokio::select! {
             _ = cancel.notified() => {
-                log::info!("Log task was cancelled.");
+                log::info!("Notification listener was stopped.");
                 break;
             }
             // Simulate work
             _ = async {
                 let res = notification_listener(&settings, &mut tx).await;
-                log::error!("Windows notification listener died unexpectedly: {:?}", res);
+                log::error!("Windows notification listener died unexpectedly: {:?}", res); //This one did NOT previously have "restarting sender"
                 return;
                 // log::info!("Working...");
             } => {}

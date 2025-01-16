@@ -208,7 +208,7 @@ pub async fn polling_notification_handler(
                     match msg {
                         Ok(msg) => tx.send(msg)?,
                         Err(e) => {
-                            log::info!("Failed to convert notification to XSOverlay message: {e}")
+                            log::warn!("Failed to convert notification to XSOverlay message: {e}")
                         }
                     }
                 }
@@ -251,7 +251,7 @@ pub async fn listening_notification_handler(
                 let msg = notif_to_message(notif_arc.clone(), config).await;
                 match msg {
                     Ok(msg) => tx.send(msg)?,
-                    Err(e) => log::info!("Failed to convert notification to XSOverlay message: {e}"),
+                    Err(e) => log::warn!("Failed to convert notification to XSOverlay message: {e}"),
                 }
             }
             Ok::<(), XSNotifyError>(())
