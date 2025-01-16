@@ -344,7 +344,6 @@ async fn run_socket(cancel: Arc<Notify>, mut rx: UnboundedReceiver<XSOverlayMess
                     res
                 ); //This one previously had "restarting sender"
                 return;
-                // log::info!("Working...");
             } => {}
         }
     }
@@ -362,7 +361,6 @@ async fn run_log(cancel: Arc<Notify>, settings: XSNotifySettings, mut tx: Unboun
                 let res = notification_listener(&settings, &mut tx).await;
                 log::error!("Windows notification listener died unexpectedly: {:?}", res); //This one did NOT previously have "restarting sender"
                 return;
-                // log::info!("Working...");
             } => {}
         }
     }
