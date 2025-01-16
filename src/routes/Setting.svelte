@@ -124,10 +124,13 @@
                         break;
                     case WhichSetting.autoLaunch:
                         theseSettings.autoLaunch = value as boolean;
+                        break;
                     case WhichSetting.minimize:
                         theseSettings.minimize = value as boolean;
+                        break;
                     case WhichSetting.minimizeOnStart:
                         theseSettings.minimizeOnStart = value as boolean;
+                        break;
                     default:
                 }
             } else {
