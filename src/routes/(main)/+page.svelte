@@ -29,47 +29,22 @@
                 Windows Notification Listener API</a
             >
             to listen for notifications.
-        </p></AboutSection
+        </p>
+        <div class="collapse collapse-open border-base-300 bg-base-300">
+            <div class="collapse-title text-xl font-extrabold text-warning">
+                Important Note
+            </div>
+            <div class="collapse-content">
+                <p>
+                    In order for XS Notify to relay notifications to XS Overlay,
+                    the notification toast <em>must</em> show up on your screen.
+                    If the toast does not appear on your screen (like for example,
+                    if the toast is blocked because you are in full screen), the
+                    notification will not be pushed to XSOverlay.
+                </p>
+            </div>
+        </div></AboutSection
     >
-
-    <div class="collapse collapse-open border-base-300 bg-base-300">
-        <div class="collapse-title text-xl font-extrabold text-warning">
-            Important Note
-        </div>
-        <div class="collapse-content">
-            <p>
-                In order for XS Notify to relay notifications to XS Overlay, the
-                notification toast <em>must</em> show up on your screen. If the toast
-                does not appear on your screen (like for example, if the toast is
-                blocked because you are in full screen), the notification will not
-                be pushed to XSOverlay.
-            </p>
-        </div>
-    </div>
-    <AboutSection title="Installation"
-        ><ol class="list-decimal ml-8">
-            <li>
-                Head over to the <a
-                    href="https://github.com/Erallie/xs-notify/releases"
-                    target="_blank"
-                    class="link">Releases</a
-                >
-                page and find the latest release.
-            </li>
-            <li>
-                Under <strong>Assets</strong>, download
-                <code>xs-notify.exe</code>.
-            </li>
-            <li>
-                Run <code>xs-notify.exe</code>.
-            </li>
-            <li>
-                Start the notification bridge when you want your notifications
-                pushed to XSOverlay.
-            </li>
-        </ol></AboutSection
-    >
-
     <AboutSection title="Auto-launch XS Notify"
         ><p>
             XS Notify has a setting you can enable to have it launch
