@@ -1,10 +1,6 @@
 use crate::error::XSNotifyError;
 use serde::{Deserialize, Serialize};
-use tokio::{
-    net::UdpSocket,
-    select,
-    sync::{mpsc, watch},
-};
+use tokio::{net::UdpSocket, sync::mpsc};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct XSOverlayMessage {
