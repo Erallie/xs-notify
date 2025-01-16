@@ -1,8 +1,55 @@
 <svg height="100" width="100" xmlns="http://www.w3.org/2000/svg">
-    <g stroke="white" stroke-width="0" stroke-linecap="round" fill="white">
+    <!-- <rect x="0" y="0" width="100" height="100" /> -->
+    <!-- <g stroke="white" stroke-width="0" stroke-linecap="round" fill="#e5cffc" mask="url(#decoration)"> -->
+    <g stroke="#e5cffc" stroke-width="5" stroke-linecap="round" fill="#e5cffc" stroke-linejoin="round" >
+        <circle r="10" cx="50" cy="80" fill="#c998ff" stroke-width="0" stroke="#c998ff" />
         <circle r="30" cx="50" cy="40"/>
-        <path d="M20 50 c">
-        <line x1="10" y1="2" x2="10" y2="19" />
+        <!-- <path d="M20 40, S20 67, 10 75, C7.5 77, 5 80, 10 80, L90 80, C95 80, 92.5 77, 90 75, S80 67, 80 40, L20 40"/> -->
+        <path d="M20 40, S20 64.5, 10 72.5, C7.5 74.5, 5 77.5, 10 77.5, L90 77.5, C95 77.5, 92.5 74.5, 90 72.5, S80 64.5, 80 40, L20 40"/>
+        <!-- <path d="M20 40, S20 67, 10 75, L90 75, S80 67, 80 40, L20 40"/> -->
+        <!-- <line x1="50" y1="80" x2="50" y2="85" stroke-width="10"/> -->
+
+        
     </g>
-    +
+    
+    <g stroke="#51204c" fill="#51204c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" >
+        <!-- <path d="M50 25, C60 26, 50 45, 50 52.5, C50 45, 40 26, 50 25" />
+        <circle cx="50" cy="65" r="3" /> -->
+        <path d="M50 24.25, C60 25.25, 50 44.25, 50 51.75, C50 44.25, 40 25.25, 50 24.25" />
+        <circle cx="50" cy="64.25" r="3.5" />
+    </g>
+    
+    <defs>
+        <!-- <mask id="letters">
+            <rect x="0" y="0" width="100" height="100" fill="white" stroke-width="0"/>
+            <g stroke="black" stroke-width="5" stroke-linecap="round" fill="none">
+                <line x1="30" y1="62.5" x2="47.5" y2="32.5"/>
+                <line x1="30" y1="32.5" x2="47.5" y2="62.5"/>
+                <path d="M71.25 40, C71.25 30, 53.75 30, 53.75 40, C53.75 50, 71.25 45, 71.25 55, C71.25 65, 53.75 65, 53.75 55" />
+            </g>
+        </mask> -->
+        <!-- <mask id="text">
+            <rect x="0" y="0" width="100" height="100" fill="white" stroke-width="0"/>
+
+            <text x="27.5" y="59" fill="black" stroke="black" font-size="35">XS</text>
+        </mask> -->
+        <mask id="decoration">
+            <rect x="0" y="0" width="100" height="100" fill="white" stroke-width="0"/>
+            <g stroke="black" stroke-width="5" stroke-linecap="round" fill="black" stroke-linejoin="round" >
+                <!-- <line x1="50" y1="27.5" x2="50" y2="50" /> -->
+                <!-- <path d="M50 27.5, C60 28.5, 50 47.5, 50 55, C50 47.5, 40 28.5, 50 27.5" />
+                <circle cx="50" cy="67.5" r="3" /> -->
+                <!-- <path d="M50 27, C60 28, 50 47, 50 54.5, C50 47, 40 28, 50 27" />
+                <circle cx="50" cy="67" r="3" /> -->
+                <!-- <path d="M50 25.5, C60 26.5, 50 45.5, 50 53, C50 45.5, 40 26.5, 50 25.5" />
+                <circle cx="50" cy="65.5" r="3" /> -->
+                <!-- <path d="M50 26, C60 27, 50 46, 50 53.5, C50 46, 40 27, 50 26" />
+                <circle cx="50" cy="66" r="3" /> -->
+                <path d="M50 25, C60 26, 50 45, 50 52.5, C50 45, 40 26, 50 25" />
+                <circle cx="50" cy="65" r="3" />
+                <!-- <path d="M50 24.5, C60 25.5, 50 44.5, 50 52, C50 44.5, 40 25.5, 50 24.5" />
+                <circle cx="50" cy="64.5" r="3" /> -->
+            </g>
+        </mask>
+    </defs>
 </svg>
