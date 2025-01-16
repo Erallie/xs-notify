@@ -52,7 +52,7 @@ impl Default for XSNotifySettings {
             skipped_apps: Vec::new(),
             auto_launch: true,
             minimize: true,
-            minimize_on_start: true, // skipped_apps: Vec::from(["App 1".to_string(), "App2".to_string()]),
+            minimize_on_start: false,
         }
     }
 }
