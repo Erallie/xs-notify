@@ -1,7 +1,7 @@
 <script lang="ts">
     import { WhichSetting } from "$lib/types/types";
-    import Setting from "../../Setting.svelte";
-    import SettingSection from "../../SettingSection.svelte";
+    import Setting from "./Setting.svelte";
+    import SettingSection from "./SettingSection.svelte";
 
     let { data } = $props();
 
