@@ -13,7 +13,7 @@ use tauri::{
     ipc::InvokeError,
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
-    Builder, Emitter, Manager, State, WindowEvent,
+    Builder, Emitter, Manager, State, Url, WindowEvent,
 };
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_log::{Target, TargetKind};
@@ -60,7 +60,17 @@ fn main() {
             let _tray = TrayIconBuilder::new()
                 .menu(&menu)
                 .on_menu_event(move |app, event| {
-                    let window = app.get_webview_window("main").unwrap();
+                    let mut window = app.get_webview_window("main").unwrap();
+                    fn get_root_url() -> PathBuf {
+                        match cfg!(debug_assertions) {
+                            true => return PathBuf::from_str("http://localhost:1420/").unwrap(),
+                            false => return PathBuf::from_str("http://tauri.localhost/").unwrap(),
+                        }
+                    }
+                    fn get_absolute_url<T: Into<String>>(relative_path: T) -> String {
+                        let relative_path: String = relative_path.into();
+                        get_root_url().join(relative_path).to_string_lossy().to_string()
+                    }
                     match event.id.as_ref() {
                         "quit" => {
                             log::info!("Quit menu item was clicked");
@@ -69,7 +79,7 @@ fn main() {
                         }
                         "about" => {
                             // Navigate to a specific page
-                            window.eval("window.location.href = '/';").unwrap();
+                            let _ = window.navigate(Url::from_str(&get_root_url().to_string_lossy()).unwrap());
                             window.show().unwrap(); // Show the window if it's hidden
                             window.set_focus().unwrap();
                         }
@@ -84,13 +94,13 @@ fn main() {
                         }
                         "settings" => {
                             // Show the window when the tray icon is clicked
-                            window.eval("window.location.href = '/settings';").unwrap();
+                            let _ = window.navigate(Url::from_str(get_absolute_url("settings").as_str()).unwrap());
                             window.show().unwrap();
                             window.set_focus().unwrap();
                         }
                         "console" => {
                             // Navigate to a specific page
-                            window.eval("window.location.href = '/console';").unwrap();
+                            let _ = window.navigate(Url::from_str(get_absolute_url("console").as_str()).unwrap());
                             window.show().unwrap(); // Show the window if it's hidden
                             window.set_focus().unwrap();
                         }
