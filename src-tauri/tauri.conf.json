@@ -15,15 +15,15 @@
                 "label": "main",
                 "title": "XS Notify",
                 "width": 800,
-                "height": 600,
-                "resizable": false
+                "height": 600
             },
             {
                 "label": "update",
                 "title": "XS Notify Updater",
                 "url": "update",
                 "width": 450,
-                "height": 300
+                "height": 300,
+                "resizable": false
             }
         ],
         "security": {
