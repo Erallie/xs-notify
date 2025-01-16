@@ -23,8 +23,7 @@
     <div class="mockup-code overflow-y-auto" id="console-el">
         {#each logElement as log}
             <pre class="text-wrap -indent-12 pl-12 {log.extraClasses}"><code
-                    ><span class={log.cls}>{log.info}</span><br
-                    />{log.msg}</code
+                    ><span class={log.cls}>{log.info}</span> {log.msg}</code
                 ></pre>
         {/each}
     </div>

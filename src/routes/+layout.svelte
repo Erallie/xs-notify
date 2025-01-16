@@ -55,14 +55,16 @@
                 extraClasses = "bg-orange-400 text-warning-content";
                 break;
         }
-        const result = /^(\[.+\]) (.+)$/gm.exec(message);
+        const result = /^\[((?!\]).)+\](\[((?!\]).)+\])\[.+\] (.+)$/gm.exec(
+            message,
+        );
         let info: string;
         let newMsg: string;
         if (!result) {
             return;
         }
-        info = result[1];
-        newMsg = result[2];
+        info = result[2];
+        newMsg = result[4];
         logElement.push({
             info,
             msg: newMsg,

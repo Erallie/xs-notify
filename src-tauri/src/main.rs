@@ -185,6 +185,7 @@ fn main() {
         .plugin(tauri_plugin_window_state::Builder::default().skip_initial_state("update").build())
         .plugin(
             tauri_plugin_log::Builder::new()
+                .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
                 .targets([
                     Target::new(TargetKind::Stdout),
                     Target::new(TargetKind::LogDir { file_name: None }),
