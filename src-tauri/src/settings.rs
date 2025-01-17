@@ -108,8 +108,6 @@ pub fn update_settings(settings: XSNotifySettings, notify: State<Arc<Mutex<XSNot
         // Disable autostart
         let _ = autostart_manager.disable();
     }
-    // Check enable state
-    log::info!("Registered for autostart: {}", autostart_manager.is_enabled().unwrap());
 
     fn save_settings(app: tauri::AppHandle, settings: XSNotifySettings) -> Result<(), XSNotifyError> {
         let mut config_dir = app.path().app_config_dir().expect("Failed Getting Config Path!");
