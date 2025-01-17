@@ -9,6 +9,32 @@
     function toggleDynamicSetting(value: boolean) {
         showEnabled = value;
     }
+
+    let listTitle = $state(returnListTitle(data.settings.isWhitelist));
+    function returnListTitle(value: boolean) {
+        switch (value) {
+            case true:
+                return "App Whitelist";
+            case false:
+                return "App Blacklist";
+        }
+    }
+
+    let listDesc = $state(returnListDesc(data.settings.isWhitelist));
+
+    function returnListDesc(value: boolean) {
+        switch (value) {
+            case true:
+                return "will";
+            case false:
+                return "will not";
+        }
+    }
+
+    function setListTitleAndDesc(value: boolean) {
+        listTitle = returnListTitle(value);
+        listDesc = returnListDesc(value);
+    }
 </script>
 
 <section class="container">
@@ -33,11 +59,19 @@
                     description="The rate at which XS Notify checks for new notifications, specified in milliseconds."
                     {settings}
                     setting={WhichSetting.pollingRate}
-                /><Setting
-                    title="Skipped apps"
-                    description="A list of names of apps that XS Notify will not push notifications for."
+                />
+                <Setting
+                    title="Use App Whitelist"
+                    description="Toggle this on if you want to treat the below setting as a whitelist instead of a blacklist."
                     {settings}
-                    setting={WhichSetting.skippedApps}
+                    setting={WhichSetting.isWhitelist}
+                    callback={setListTitleAndDesc}
+                />
+                <Setting
+                    title={listTitle}
+                    description="A list of names of apps that XS Notify {listDesc} push notifications for."
+                    {settings}
+                    setting={WhichSetting.appList}
                 /></SettingSection
             >
             <!-- Dynamic Notifications Settings -->

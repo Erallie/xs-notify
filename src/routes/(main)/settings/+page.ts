@@ -19,8 +19,8 @@ export const load: PageLoad = async () => {
         readingSpeed: 238.0,
         minTimeout: 2.0,
         maxTimeout: 120.0,
-        // skipped_apps: Vec::new(),
-        skippedApps: ["App 1", "App 2"],
+        // app_list: Vec::new(),
+        appList: ["App 1", "App 2"],
     }; */
 
     return { settings };

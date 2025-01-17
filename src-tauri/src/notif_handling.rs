@@ -201,7 +201,7 @@ pub async fn polling_notification_handler(
                 log::info!("Handling new notification");
 
                 let app_name = get_app_name(&notif).unwrap();
-                if config.skipped_apps.contains(&app_name) {
+                if (config.app_list.contains(&app_name) && !config.is_whitelist) || (!config.app_list.contains(&app_name) && config.is_whitelist) {
                     log::info!("Skipping notification from {}", app_name);
                 } else {
                     let msg = notif_to_message(notif.clone(), config).await;
@@ -245,7 +245,7 @@ pub async fn listening_notification_handler(
             let notif_arc = Arc::new(notif.clone());
 
             let app_name = get_app_name(&notif_arc).unwrap();
-            if config.skipped_apps.contains(&app_name) {
+            if (config.app_list.contains(&app_name) && !config.is_whitelist) || (!config.app_list.contains(&app_name) && config.is_whitelist) {
                 log::info!("Skipping notification from {}", app_name);
             } else {
                 let msg = notif_to_message(notif_arc.clone(), config).await;

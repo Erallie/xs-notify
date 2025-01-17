@@ -12,7 +12,8 @@ export type XSNotifySettings = {
     minTimeout: number;
     maxTimeout: number;
 
-    skippedApps: string[];
+    isWhitelist: boolean;
+    appList: string[];
 
     autoLaunch: boolean;
     minimize: boolean;
@@ -44,7 +45,8 @@ export enum WhichSetting {
     readingSpeed,
     minTimeout,
     maxTimeout,
-    skippedApps,
+    isWhitelist,
+    appList,
     autoLaunch,
     minimize,
     minimizeOnStart,

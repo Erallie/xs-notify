@@ -27,7 +27,9 @@ pub struct XSNotifySettings {
     pub max_timeout: f32,
 
     #[serde(default)]
-    pub skipped_apps: Vec<String>,
+    pub is_whitelist: bool,
+    #[serde(default)]
+    pub app_list: Vec<String>,
 
     #[serde(default)]
     pub auto_launch: bool,
@@ -49,7 +51,8 @@ impl Default for XSNotifySettings {
             reading_speed: 238.0,
             min_timeout: 2.0,
             max_timeout: 120.0,
-            skipped_apps: Vec::new(),
+            is_whitelist: false,
+            app_list: Vec::new(),
             auto_launch: true,
             minimize: true,
             minimize_on_start: false,

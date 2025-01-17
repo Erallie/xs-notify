@@ -55,9 +55,13 @@
                 type = SettingType.number;
                 return settings.maxTimeout;
 
-            case WhichSetting.skippedApps:
+            case WhichSetting.isWhitelist:
+                type = SettingType.toggle;
+                return settings.isWhitelist;
+
+            case WhichSetting.appList:
                 type = SettingType.stringArray;
-                return settings.skippedApps;
+                return settings.appList;
 
             case WhichSetting.autoLaunch:
                 type = SettingType.toggle;
@@ -131,6 +135,9 @@
                     case WhichSetting.minimizeOnStart:
                         theseSettings.minimizeOnStart = value as boolean;
                         break;
+                    case WhichSetting.isWhitelist:
+                        theseSettings.isWhitelist = value as boolean;
+                        break;
                     default:
                 }
             } else {
@@ -140,9 +147,9 @@
         } else if (
             Array.isArray(input) &&
             input.every((item) => typeof item === "string") &&
-            setting == WhichSetting.skippedApps
+            setting == WhichSetting.appList
         ) {
-            theseSettings.skippedApps = input;
+            theseSettings.appList = input;
         }
         setDynamicSection();
         invoke("update_settings", { settings: theseSettings });
