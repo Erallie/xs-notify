@@ -39,6 +39,34 @@ fn main() {
 
             app.manage(state.clone());
 
+            // let state_clone_3 = Arc::clone(&state_clone_2);
+            let update_window = app.get_webview_window("update").unwrap();
+
+            let app_name = app.package_info().crate_name;
+            // let app_name = "xs_notify";
+            let version = app.package_info().version.clone();
+
+            let state_clone = Arc::clone(&state);
+
+            tauri::async_runtime::spawn(async move {
+                let result = fetch_latest(version.to_string(), app_name.to_string()).await;
+                match result {
+                    Ok(message) => {
+                        state_clone.lock().unwrap().latest_result = message.clone();
+                        if message.is_latest {
+                            let _ = update_window.close().unwrap();
+                        } else {
+                            update_window.show().unwrap();
+                            update_window.set_focus().unwrap();
+                        }
+                    }
+                    Err(e) => {
+                        let _ = update_window.close().unwrap();
+                        log::error!("Error fetching latest version: {}", e);
+                    }
+                }
+            });
+
             let toggle_run_i = Arc::new(Mutex::new(MenuItem::with_id(
                 app,
                 "toggle_run",
@@ -148,32 +176,6 @@ fn main() {
                         }
                     }
                     _ => {}
-                }
-            });
-
-            // let state_clone_3 = Arc::clone(&state_clone_2);
-            let update_window = app.get_webview_window("update").unwrap();
-
-            let app_name = app.package_info().crate_name;
-            // let app_name = "xs_notify";
-            let version = app.package_info().version.clone();
-
-            tauri::async_runtime::spawn(async move {
-                let result = fetch_latest(version.to_string(), app_name.to_string()).await;
-                match result {
-                    Ok(message) => {
-                        state_clone.lock().unwrap().latest_result = message.clone();
-                        if message.is_latest {
-                            let _ = update_window.close().unwrap();
-                        } else {
-                            update_window.show().unwrap();
-                            update_window.set_focus().unwrap();
-                        }
-                    }
-                    Err(e) => {
-                        let _ = update_window.close().unwrap();
-                        log::error!("Error fetching latest version: {}", e);
-                    }
                 }
             });
 
