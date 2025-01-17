@@ -1,9 +1,9 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use config::XSNotifySettings;
 use error::XSNotifyError;
 use notif_handling::notification_listener;
+use settings::{get_settings, update_settings, XSNotifySettings};
 use std::{
     fs,
     path::PathBuf,
@@ -25,9 +25,9 @@ use tokio::sync::{
 use update::{download_update, fetch_latest, open_update_link, LatestResult};
 use xsoverlay::{xs_notify, XSOverlayMessage};
 
-mod config;
 mod error;
 pub mod notif_handling;
+mod settings;
 pub mod update;
 pub mod xsoverlay;
 
