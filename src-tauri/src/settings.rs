@@ -48,7 +48,7 @@ pub struct XSNotifySettings {
 impl Default for XSNotifySettings {
     fn default() -> Self {
         Self {
-            auto_run: true,
+            auto_run: false,
 
             port: 42069,
             host: String::from("localhost"),
