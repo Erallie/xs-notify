@@ -1,19 +1,16 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use error::XSNotifyError;
 use chrono::prelude::{DateTime, Local};
 use logs::load_logs;
 use notif_handling::notification_listener;
 use settings::{get_settings, update_settings, XSNotifySettings};
 use std::{
-    fs,
     path::PathBuf,
     str::FromStr,
     sync::{Arc, Mutex, MutexGuard},
 };
 use tauri::{
-    ipc::InvokeError,
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
     Builder, Emitter, Manager, State, Url, WindowEvent,
