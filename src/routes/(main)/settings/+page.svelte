@@ -60,7 +60,7 @@
                     setting={WhichSetting.pollingRate}
                 />
                 <Setting
-                    title="Use App Whitelist"
+                    title="Use Whitelist"
                     description="Toggle this on if you want to treat the below setting as a whitelist instead of a blacklist."
                     warning={true}
                     {settings}
