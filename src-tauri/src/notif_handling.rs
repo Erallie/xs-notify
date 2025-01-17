@@ -64,25 +64,6 @@ pub async fn notif_to_message(
     // max_characters: usize,
 ) -> Result<XSOverlayMessage, XSNotifyError> {
     let app_name = get_app_name(&notif).unwrap();
-
-    // Check if the app name is in the skipped apps list
-    if config.skipped_apps.contains(&app_name) {
-        // Skip the rest of the code and return an empty XSOverlayMessage
-        return Ok(XSOverlayMessage {
-            messageType: 0, // or any other default value
-            index: 0,
-            timeout: 0.0,
-            height: 0.0,
-            opacity: 0.0,
-            volume: 0.0,
-            audioPath: "default".to_string(),
-            title: "".to_string(),
-            content: "".to_string(),
-            useBase64Icon: false,
-            icon: "default".to_string(),
-            sourceApp: app_name.clone(), // Clone if you need to use it later
-        });
-    }
     // log::info!("App: {}", app_name);
     /* let icon = read_logo(display_info)
     .await
