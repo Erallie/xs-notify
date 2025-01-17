@@ -109,3 +109,46 @@ fn parse_logs(input: String) -> Vec<Logs> {
     }
     results
 }
+
+pub fn delete_old_logs(log_dir: PathBuf) -> Result<(), XSNotifyError> {
+    // Read the directory and collect log files
+    let mut log_files: Vec<(PathBuf, DateTime<Local>)> = Vec::new();
+
+    let entries = fs::read_dir(log_dir)?;
+    for entry in entries {
+        let entry = entry?; // Handle the Result
+        let path = entry.path(); // Get the path of the entry
+
+        // Check if it's a file and has a .log extension
+        if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("log") {
+            // Get the filename as a string
+            if let Some(filename) = path.file_name().and_then(|s| s.to_str()) {
+                // Parse the filename into a NaiveDateTime
+                if let Ok(naive_datetime) = NaiveDateTime::parse_from_str(filename, "%Y-%m-%d at %H.%M.%S.log") {
+                    // Convert NaiveDateTime to DateTime<Local>
+                    let datetime: DateTime<Local> = Local
+                        .from_local_datetime(&naive_datetime)
+                        .single()
+                        .expect("Failed to convert to local datetime");
+                    log_files.push((path.clone(), datetime)); // Store the path and datetime
+                }
+            }
+        }
+    }
+
+    // Sort the log files by date (latest first)
+    log_files.sort_by(|a, b| b.1.cmp(&a.1));
+
+    // Keep only the latest 10 files
+    let files_to_keep = log_files.iter().take(10).map(|(path, _)| path).collect::<Vec<&PathBuf>>();
+
+    // Delete files that are not in the files_to_keep
+    for (path, _) in log_files.clone() {
+        if !files_to_keep.contains(&&path) {
+            println!("Deleting file: {}", path.display());
+            fs::remove_file(path)?; // Delete the file
+        }
+    }
+
+    Ok(())
+}

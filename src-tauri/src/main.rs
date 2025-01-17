@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use chrono::prelude::{DateTime, Local};
-use logs::load_logs;
+use logs::{delete_old_logs, load_logs};
 use notif_handling::notification_listener;
 use settings::{get_settings, update_settings, XSNotifySettings};
 use std::{
@@ -66,6 +66,14 @@ fn main() {
                     }
                 }
             });
+
+            let log_dir = app.app_handle().path().app_log_dir()?;
+            match delete_old_logs(log_dir) {
+                Ok(_) => (),
+                Err(e) => {
+                    log::error!("Failed to delete old log files: {e}");
+                }
+            }
 
             let toggle_run_i = Arc::new(Mutex::new(MenuItem::with_id(
                 app,
