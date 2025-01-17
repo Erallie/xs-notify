@@ -65,7 +65,7 @@
     <div class="drawer-side">
         <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"
         ></label>
-        <nav class="menu bg-base-200 text-base-content min-h-full w-80 p-4">
+        <nav class="menu bg-base-200 text-base-content min-h-full w-52 p-4">
             <!-- Sidebar content here -->
             <ul>
                 <li><a href="/">About</a></li>
@@ -75,10 +75,13 @@
                 <li>
                     <a href="/console">Console</a>
                 </li>
-                <li>
-                    <button onclick={toggleRun}>{toggleRunText}</button>
-                </li>
             </ul>
+
+            <button
+                id="bridge-button"
+                class="btn btn-secondary absolute bottom-10 self-center"
+                onclick={toggleRun}>{toggleRunText}</button
+            >
         </nav>
     </div>
 </main>
