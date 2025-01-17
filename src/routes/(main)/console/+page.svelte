@@ -58,7 +58,7 @@
                 extraClasses = "bg-orange-400 text-warning-content";
                 break;
         }
-        const result = /^\[[^\[\]]+\](\[[^\[\]]+\])\[.+\] (.+)$/gm.exec(
+        const result = /^\[[^\[\]]+\](\[[^\[\]]+\])\[.+\] ([^\[]+)$/gm.exec(
             message,
         );
         let info: string;

@@ -80,7 +80,7 @@ pub fn load_logs(app: tauri::AppHandle) -> Result<Vec<Logs>, XSNotifyError> {
 
 fn parse_logs(input: String) -> Vec<Logs> {
     // Define the regex pattern
-    let re = Regex::new(r"(?m)^\[[^\[\]]+\](\[[^\[\]]+\])\[([A-Z]+)\](?:\[.+\])* (.+)$").unwrap();
+    let re = Regex::new(r"(?m)^\[[^\[\]]+\](\[[^\[\]]+\])\[([A-Z]+)\](?:\[.+\])* ([^\[]+)$").unwrap();
 
     // Vector to hold the results
     let mut results: Vec<Logs> = Vec::new();
