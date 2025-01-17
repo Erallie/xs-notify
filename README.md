@@ -8,6 +8,7 @@ This is a desktop application that runs alongside XSOverlay and pushes your wind
 # Key Features
 - An option to specify a **whitelist/blacklist** to include or exclude certain apps from being pushed to XSOverlay.
 - An option to have the **display time** of notifications be **dynamically set** based on the amount of text in a notification and your reading speed.
+- A nice **interface** for the settings with a tab for the console.
 - Options to **launch on system startup** and **minimize to the system tray**.
 # Installation
 1. Head over to the [Releases](https://github.com/Erallie/xs-notify/releases) page and find the latest release.
