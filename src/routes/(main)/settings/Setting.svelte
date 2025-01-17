@@ -10,6 +10,7 @@
     let {
         title,
         description,
+        warning,
         settings,
         setting,
         callback = $bindable(),
@@ -200,7 +201,9 @@
 
 <div class="setting">
     <div class="text-lg font-semibold mb-2">
-        {title}
+        {#if warning}
+            <span class="text-warning"> * </span>
+        {/if}{title}
     </div>
     {#if type == SettingType.number}
         <input
@@ -257,7 +260,7 @@
     {/if}
     {#if description && description != ""}
         <div class="label">
-            <span class="label-text text-pretty">{description}</span>
+            <span class="label-text text-pretty">{@html description}</span>
         </div>
     {/if}
     {#if type == SettingType.stringArray && Array.isArray(value) && value.every((item) => typeof item === "string")}

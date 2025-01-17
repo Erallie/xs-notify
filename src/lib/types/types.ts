@@ -30,6 +30,7 @@ export enum SettingType {
 export type Setting = {
     title: string;
     description?: string;
+    warning?: boolean;
     settings: XSNotifySettings;
     setting: WhichSetting;
     callback?: Function;
@@ -60,6 +61,7 @@ export enum WhichSetting {
 export type SettingSection = {
     title: string;
     description?: string;
+    warning?: boolean;
     children: any;
 }
 
