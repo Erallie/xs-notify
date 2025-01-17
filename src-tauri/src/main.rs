@@ -307,7 +307,7 @@ async fn run_socket(cancel: Arc<Notify>, mut rx: UnboundedReceiver<XSOverlayMess
             _ = async {
                 let res = xs_notify(&mut rx, &host, port).await;
                 log::error!(
-                    "XSOverlay notification sender died unexpectedly: {:?}",
+                    "XSOverlay notification sender died unexpectedly: {:?}\nTry restarting the notification bridge.",
                     res
                 ); //This one previously had "restarting sender"
             } => {
@@ -327,7 +327,7 @@ async fn run_log(cancel: Arc<Notify>, settings: XSNotifySettings, mut tx: Unboun
             // Simulate work
             _ = async {
                 let res = notification_listener(&settings, &mut tx).await;
-                log::error!("Windows notification listener died unexpectedly: {:?}", res); //This one did NOT previously have "restarting sender"
+                log::error!("Windows notification listener died unexpectedly: {:?}\nTry restarting the notification bridge.", res); //This one did NOT previously have "restarting sender"
             } => {
                 break;
             }
