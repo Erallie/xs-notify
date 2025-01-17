@@ -208,6 +208,7 @@ fn main() {
                     }),
                     Target::new(TargetKind::Webview),
                 ])
+                .level(log::LevelFilter::Info)
                 .build(),
         )
         .plugin(tauri_plugin_autostart::init(
