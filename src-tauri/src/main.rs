@@ -198,7 +198,6 @@ fn main() {
             Some(vec![]), /* arbitrary number of args to pass to your app */ // Some(vec!["--flag1", "--flag2"]),
         ))
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
             get_settings,
             get_running,

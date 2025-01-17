@@ -8,15 +8,6 @@
     "permissions": [
         "core:default",
         "opener:default",
-        "fs:create-app-specific-dirs",
-        "log:allow-log",
-        {
-            "identifier": "fs:allow-write-file",
-            "allow": [
-                {
-                    "path": "$APPCONFIG"
-                }
-            ]
-        }
+        "log:allow-log"
     ]
 }
