@@ -42,8 +42,6 @@ pub async fn fetch_latest<T: Into<String>>(current_version: T, app_name: T) -> R
     let exe_filename = app_name + ".exe";
 
     // Fetch the latest release from GitHub
-    // log::info!("Current version: {}", current_version);
-    println!("Current version: {}", current_version);
     let url = format!("https://api.github.com/repos/{}/{}/releases/latest", username, repository);
     let client = reqwest::Client::new();
     let response = client.get(&url).header("User-Agent", "reqwest").send().await?.json::<Release>().await?;

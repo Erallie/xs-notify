@@ -64,25 +64,6 @@ pub async fn notif_to_message(
     // max_characters: usize,
 ) -> Result<XSOverlayMessage, XSNotifyError> {
     let app_name = get_app_name(&notif).unwrap();
-
-    // Check if the app name is in the skipped apps list
-    if config.skipped_apps.contains(&app_name) {
-        // Skip the rest of the code and return an empty XSOverlayMessage
-        return Ok(XSOverlayMessage {
-            messageType: 0, // or any other default value
-            index: 0,
-            timeout: 0.0,
-            height: 0.0,
-            opacity: 0.0,
-            volume: 0.0,
-            audioPath: "default".to_string(),
-            title: "".to_string(),
-            content: "".to_string(),
-            useBase64Icon: false,
-            icon: "default".to_string(),
-            sourceApp: app_name.clone(), // Clone if you need to use it later
-        });
-    }
     // log::info!("App: {}", app_name);
     /* let icon = read_logo(display_info)
     .await
@@ -201,14 +182,14 @@ pub async fn polling_notification_handler(
                 log::info!("Handling new notification");
 
                 let app_name = get_app_name(&notif).unwrap();
-                if config.skipped_apps.contains(&app_name) {
+                if (config.app_list.contains(&app_name) && !config.is_whitelist) || (!config.app_list.contains(&app_name) && config.is_whitelist) {
                     log::info!("Skipping notification from {}", app_name);
                 } else {
                     let msg = notif_to_message(notif.clone(), config).await;
                     match msg {
                         Ok(msg) => tx.send(msg)?,
                         Err(e) => {
-                            log::info!("Failed to convert notification to XSOverlay message: {e}")
+                            log::warn!("Failed to convert notification to XSOverlay message: {e}")
                         }
                     }
                 }
@@ -245,13 +226,13 @@ pub async fn listening_notification_handler(
             let notif_arc = Arc::new(notif.clone());
 
             let app_name = get_app_name(&notif_arc).unwrap();
-            if config.skipped_apps.contains(&app_name) {
+            if (config.app_list.contains(&app_name) && !config.is_whitelist) || (!config.app_list.contains(&app_name) && config.is_whitelist) {
                 log::info!("Skipping notification from {}", app_name);
             } else {
                 let msg = notif_to_message(notif_arc.clone(), config).await;
                 match msg {
                     Ok(msg) => tx.send(msg)?,
-                    Err(e) => log::info!("Failed to convert notification to XSOverlay message: {e}"),
+                    Err(e) => log::warn!("Failed to convert notification to XSOverlay message: {e}"),
                 }
             }
             Ok::<(), XSNotifyError>(())

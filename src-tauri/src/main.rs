@@ -1,16 +1,16 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use config::XSNotifySettings;
-use error::XSNotifyError;
+use chrono::prelude::{DateTime, Local};
+use logs::{delete_old_logs, load_logs};
 use notif_handling::notification_listener;
+use settings::{get_settings, update_settings, XSNotifySettings};
 use std::{
-    fs,
     path::PathBuf,
+    str::FromStr,
     sync::{Arc, Mutex, MutexGuard},
 };
 use tauri::{
-    ipc::InvokeError,
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
     Builder, Emitter, Manager, State, Url, WindowEvent,
@@ -24,9 +24,10 @@ use tokio::sync::{
 use update::{download_update, fetch_latest, open_update_link, LatestResult};
 use xsoverlay::{xs_notify, XSOverlayMessage};
 
-mod config;
 mod error;
+mod logs;
 pub mod notif_handling;
+mod settings;
 pub mod update;
 pub mod xsoverlay;
 
@@ -37,6 +38,42 @@ fn main() {
             let state = Arc::new(Mutex::new(XSNotify::initialize(config_directory)));
 
             app.manage(state.clone());
+
+            // let state_clone_3 = Arc::clone(&state_clone_2);
+            let update_window = app.get_webview_window("update").unwrap();
+
+            let app_name = app.package_info().crate_name;
+            // let app_name = "xs_notify";
+            let version = app.package_info().version.clone();
+
+            let state_clone = Arc::clone(&state);
+
+            tauri::async_runtime::spawn(async move {
+                let result = fetch_latest(version.to_string(), app_name.to_string()).await;
+                match result {
+                    Ok(message) => {
+                        state_clone.lock().unwrap().latest_result = message.clone();
+                        if message.is_latest {
+                            let _ = update_window.close().unwrap();
+                        } else {
+                            update_window.show().unwrap();
+                            update_window.set_focus().unwrap();
+                        }
+                    }
+                    Err(e) => {
+                        let _ = update_window.close().unwrap();
+                        log::error!("Error fetching latest version: {}", e);
+                    }
+                }
+            });
+
+            let log_dir = app.app_handle().path().app_log_dir()?;
+            match delete_old_logs(log_dir) {
+                Ok(_) => (),
+                Err(e) => {
+                    log::error!("Failed to delete old log files: {e}");
+                }
+            }
 
             let toggle_run_i = Arc::new(Mutex::new(MenuItem::with_id(
                 app,
@@ -150,32 +187,6 @@ fn main() {
                 }
             });
 
-            // let state_clone_3 = Arc::clone(&state_clone_2);
-            let update_window = app.get_webview_window("update").unwrap();
-
-            let app_name = app.package_info().crate_name;
-            // let app_name = "xs_notify";
-            let version = app.package_info().version.clone();
-
-            tauri::async_runtime::spawn(async move {
-                let result = fetch_latest(version.to_string(), app_name.to_string()).await;
-                match result {
-                    Ok(message) => {
-                        state_clone.lock().unwrap().latest_result = message.clone();
-                        if message.is_latest {
-                            let _ = update_window.close().unwrap();
-                        } else {
-                            update_window.show().unwrap();
-                            update_window.set_focus().unwrap();
-                        }
-                    }
-                    Err(e) => {
-                        let _ = update_window.close().unwrap();
-                        log::error!("Error fetching latest version: {}", e);
-                    }
-                }
-            });
-
             Ok(())
         })
         .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
@@ -184,11 +195,20 @@ fn main() {
         .plugin(tauri_plugin_window_state::Builder::default().skip_initial_state("update").build())
         .plugin(
             tauri_plugin_log::Builder::new()
+                .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
                 .targets([
                     Target::new(TargetKind::Stdout),
-                    Target::new(TargetKind::LogDir { file_name: None }),
+                    Target::new(TargetKind::LogDir {
+                        file_name: {
+                            let now: DateTime<Local> = Local::now();
+                            let formatted_time = now.format("%Y-%m-%d at %H.%M.%S").to_string();
+                            Some(formatted_time)
+                        },
+                    }),
                     Target::new(TargetKind::Webview),
                 ])
+                .level(log::LevelFilter::Info)
                 .build(),
         )
         .plugin(tauri_plugin_autostart::init(
@@ -196,12 +216,12 @@ fn main() {
             Some(vec![]), /* arbitrary number of args to pass to your app */ // Some(vec!["--flag1", "--flag2"]),
         ))
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
             get_settings,
             get_running,
             update_settings,
             toggle_run,
+            load_logs,
             download_update,
             open_update_link
         ])
@@ -234,59 +254,6 @@ impl XSNotify {
             latest_result: LatestResult::default(),
         }
     }
-}
-
-#[tauri::command]
-fn get_settings(notify: State<Arc<Mutex<XSNotify>>>) -> XSNotifySettings {
-    let notify = notify.lock().unwrap();
-    let clone = Arc::clone(&notify.settings);
-    let settings = clone.lock().unwrap().clone();
-    settings
-}
-
-#[tauri::command(rename_all = "snake_case")]
-fn update_settings(settings: XSNotifySettings, notify: State<Arc<Mutex<XSNotify>>>, app: tauri::AppHandle) -> Result<(), InvokeError> {
-    let mut notify = notify.lock().unwrap();
-    notify.settings = Arc::new(Mutex::new(settings.clone()));
-
-    // Get the autostart manager
-    let autostart_manager = app.autolaunch();
-
-    if settings.auto_launch {
-        // Enable autostart
-        let _ = autostart_manager.enable();
-    } else {
-        // Disable autostart
-        let _ = autostart_manager.disable();
-    }
-    // Check enable state
-    log::info!("Registered for autostart: {}", autostart_manager.is_enabled().unwrap());
-
-    fn save_settings(app: tauri::AppHandle, settings: XSNotifySettings) -> Result<(), XSNotifyError> {
-        let mut config_dir = app.path().app_config_dir().expect("Failed Getting Config Path!");
-        if !config_dir.exists() {
-            fs::create_dir_all(&config_dir)?; // Ensure the directory exists
-        }
-        config_dir.push("config.json");
-
-        let json_string = serde_json::to_string(&settings).expect("Failed to serialize settings");
-        // log::info!("{}", json_string);
-        // let mut file = fs::File::create(config_dir)?;
-        // let _write = file.write_all(json_string.as_bytes())?;
-        let _ = fs::write(config_dir, json_string)?;
-        Ok(())
-    }
-
-    let _save = match save_settings(app, settings) {
-        Ok(_) => {
-            log::info!("Settings successfully updated");
-        }
-        Err(e) => {
-            log::error!("Failed to update settings: {}", e);
-        }
-    };
-
-    Ok(())
 }
 
 #[tauri::command]
@@ -333,19 +300,19 @@ async fn run_socket(cancel: Arc<Notify>, mut rx: UnboundedReceiver<XSOverlayMess
     loop {
         tokio::select! {
             _ = cancel.notified() => {
-                log::info!("Socket task was cancelled.");
+                log::info!("Bridge socket was closed.");
                 break;
             }
             // Simulate work
             _ = async {
                 let res = xs_notify(&mut rx, &host, port).await;
                 log::error!(
-                    "XSOverlay notification sender died unexpectedly: {:?}, restarting sender",
+                    "XSOverlay notification sender died unexpectedly: {:?}\nTry restarting the notification bridge.",
                     res
-                );
-                return;
-                // log::info!("Working...");
-            } => {}
+                ); //This one previously had "restarting sender"
+            } => {
+                break;
+            }
         }
     }
 }
@@ -354,16 +321,16 @@ async fn run_log(cancel: Arc<Notify>, settings: XSNotifySettings, mut tx: Unboun
     loop {
         tokio::select! {
             _ = cancel.notified() => {
-                log::info!("Log task was cancelled.");
+                log::info!("Notification listener was stopped.");
                 break;
             }
             // Simulate work
             _ = async {
                 let res = notification_listener(&settings, &mut tx).await;
-                log::error!("Windows notification listener died unexpectedly: {:?}", res);
-                return;
-                // log::info!("Working...");
-            } => {}
+                log::error!("Windows notification listener died unexpectedly: {:?}\nTry restarting the notification bridge.", res); //This one did NOT previously have "restarting sender"
+            } => {
+                break;
+            }
         }
     }
 }

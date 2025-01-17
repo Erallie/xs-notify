@@ -9,8 +9,6 @@
         "core:default",
         "opener:default",
         "log:allow-log",
-        "core:window:allow-close",
-        "fs:create-app-specific-dirs",
-        "fs:allow-write-file"
+        "core:window:allow-close"
     ]
 }

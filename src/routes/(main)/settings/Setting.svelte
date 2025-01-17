@@ -10,6 +10,7 @@
     let {
         title,
         description,
+        warning,
         settings,
         setting,
         callback = $bindable(),
@@ -55,9 +56,13 @@
                 type = SettingType.number;
                 return settings.maxTimeout;
 
-            case WhichSetting.skippedApps:
+            case WhichSetting.isWhitelist:
+                type = SettingType.toggle;
+                return settings.isWhitelist;
+
+            case WhichSetting.appList:
                 type = SettingType.stringArray;
-                return settings.skippedApps;
+                return settings.appList;
 
             case WhichSetting.autoLaunch:
                 type = SettingType.toggle;
@@ -124,10 +129,16 @@
                         break;
                     case WhichSetting.autoLaunch:
                         theseSettings.autoLaunch = value as boolean;
+                        break;
                     case WhichSetting.minimize:
                         theseSettings.minimize = value as boolean;
+                        break;
                     case WhichSetting.minimizeOnStart:
                         theseSettings.minimizeOnStart = value as boolean;
+                        break;
+                    case WhichSetting.isWhitelist:
+                        theseSettings.isWhitelist = value as boolean;
+                        break;
                     default:
                 }
             } else {
@@ -137,9 +148,9 @@
         } else if (
             Array.isArray(input) &&
             input.every((item) => typeof item === "string") &&
-            setting == WhichSetting.skippedApps
+            setting == WhichSetting.appList
         ) {
-            theseSettings.skippedApps = input;
+            theseSettings.appList = input;
         }
         setDynamicSection();
         invoke("update_settings", { settings: theseSettings });
@@ -190,7 +201,9 @@
 
 <div class="setting">
     <div class="text-lg font-semibold mb-2">
-        {title}
+        {#if warning}
+            <span class="text-warning"> * </span>
+        {/if}{title}
     </div>
     {#if type == SettingType.number}
         <input
@@ -247,7 +260,7 @@
     {/if}
     {#if description && description != ""}
         <div class="label">
-            <span class="label-text text-pretty">{description}</span>
+            <span class="label-text text-pretty">{@html description}</span>
         </div>
     {/if}
     {#if type == SettingType.stringArray && Array.isArray(value) && value.every((item) => typeof item === "string")}

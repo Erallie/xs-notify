@@ -603,8 +603,10 @@ checksum = "7e36cc9d416881d2e24f9a963be5fb1cd90966419ac844274161d10488b3e825"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
+ "js-sys",
  "num-traits",
  "serde",
+ "wasm-bindgen",
  "windows-targets 0.52.6",
 ]
 
@@ -4218,29 +4220,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tauri-plugin-fs"
-version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1a1edf18000f02903a7c2e5997fb89aca455ecbc0acc15c6535afbb883be223"
-dependencies = [
- "anyhow",
- "dunce",
- "glob",
- "percent-encoding",
- "schemars",
- "serde",
- "serde_json",
- "serde_repr",
- "tauri",
- "tauri-plugin",
- "tauri-utils",
- "thiserror 2.0.11",
- "toml 0.8.19",
- "url",
- "uuid",
-]
-
-[[package]]
 name = "tauri-plugin-log"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5731,10 +5710,12 @@ dependencies = [
 
 [[package]]
 name = "xs-notify"
-version = "1.1.0"
+version = "1.1.2"
 dependencies = [
  "bytes",
+ "chrono",
  "log",
+ "regex",
  "reqwest",
  "semver",
  "serde",
@@ -5742,7 +5723,6 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-autostart",
- "tauri-plugin-fs",
  "tauri-plugin-log",
  "tauri-plugin-opener",
  "tauri-plugin-single-instance",
