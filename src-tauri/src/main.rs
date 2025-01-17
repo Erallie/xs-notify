@@ -238,59 +238,6 @@ impl XSNotify {
 }
 
 #[tauri::command]
-fn get_settings(notify: State<Arc<Mutex<XSNotify>>>) -> XSNotifySettings {
-    let notify = notify.lock().unwrap();
-    let clone = Arc::clone(&notify.settings);
-    let settings = clone.lock().unwrap().clone();
-    settings
-}
-
-#[tauri::command(rename_all = "snake_case")]
-fn update_settings(settings: XSNotifySettings, notify: State<Arc<Mutex<XSNotify>>>, app: tauri::AppHandle) -> Result<(), InvokeError> {
-    let mut notify = notify.lock().unwrap();
-    notify.settings = Arc::new(Mutex::new(settings.clone()));
-
-    // Get the autostart manager
-    let autostart_manager = app.autolaunch();
-
-    if settings.auto_launch {
-        // Enable autostart
-        let _ = autostart_manager.enable();
-    } else {
-        // Disable autostart
-        let _ = autostart_manager.disable();
-    }
-    // Check enable state
-    log::info!("Registered for autostart: {}", autostart_manager.is_enabled().unwrap());
-
-    fn save_settings(app: tauri::AppHandle, settings: XSNotifySettings) -> Result<(), XSNotifyError> {
-        let mut config_dir = app.path().app_config_dir().expect("Failed Getting Config Path!");
-        if !config_dir.exists() {
-            fs::create_dir_all(&config_dir)?; // Ensure the directory exists
-        }
-        config_dir.push("config.json");
-
-        let json_string = serde_json::to_string(&settings).expect("Failed to serialize settings");
-        // log::info!("{}", json_string);
-        // let mut file = fs::File::create(config_dir)?;
-        // let _write = file.write_all(json_string.as_bytes())?;
-        let _ = fs::write(config_dir, json_string)?;
-        Ok(())
-    }
-
-    let _save = match save_settings(app, settings) {
-        Ok(_) => {
-            log::info!("Settings successfully updated");
-        }
-        Err(e) => {
-            log::error!("Failed to update settings: {}", e);
-        }
-    };
-
-    Ok(())
-}
-
-#[tauri::command]
 fn toggle_run(state: State<Arc<Mutex<XSNotify>>>) -> Result<bool, ()> {
     let notify = state.lock().unwrap();
     let result = toggle_run_2(notify)?;
