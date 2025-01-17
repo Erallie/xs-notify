@@ -2,6 +2,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use error::XSNotifyError;
+use chrono::prelude::{DateTime, Local};
+use logs::load_logs;
 use notif_handling::notification_listener;
 use settings::{get_settings, update_settings, XSNotifySettings};
 use std::{
@@ -26,6 +28,7 @@ use update::{download_update, fetch_latest, open_update_link, LatestResult};
 use xsoverlay::{xs_notify, XSOverlayMessage};
 
 mod error;
+mod logs;
 pub mod notif_handling;
 mod settings;
 pub mod update;
@@ -188,9 +191,16 @@ fn main() {
         .plugin(
             tauri_plugin_log::Builder::new()
                 .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
                 .targets([
                     Target::new(TargetKind::Stdout),
-                    Target::new(TargetKind::LogDir { file_name: None }),
+                    Target::new(TargetKind::LogDir {
+                        file_name: {
+                            let now: DateTime<Local> = Local::now();
+                            let formatted_time = now.format("%Y-%m-%d at %H.%M.%S").to_string();
+                            Some(formatted_time)
+                        },
+                    }),
                     Target::new(TargetKind::Webview),
                 ])
                 .build(),
@@ -205,6 +215,7 @@ fn main() {
             get_running,
             update_settings,
             toggle_run,
+            load_logs,
             download_update,
             open_update_link
         ])

@@ -66,6 +66,6 @@ export type SettingSection = {
 export type Logs = {
     info: string;
     msg: string;
-    cls: string;
+    infoCls: string;
     extraClasses?: string;
 }

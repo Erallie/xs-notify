@@ -1,3 +1,5 @@
+use std::string::FromUtf8Error;
+
 use crate::xsoverlay::XSOverlayMessage;
 use thiserror::Error as ThisError;
 
@@ -15,6 +17,8 @@ pub enum XSNotifyError {
     ReqwestError(#[from] reqwest::Error),
     #[error("Tauri Error: {0}")]
     TauriError(#[from] tauri::Error),
+    #[error("Utf Error: {0}")]
+    UtfError(#[from] FromUtf8Error),
     #[error("{0}")]
     Custom(String),
 }
