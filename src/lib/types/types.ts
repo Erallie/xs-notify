@@ -37,16 +37,21 @@ export type Setting = {
 
 export enum WhichSetting {
     autoRun,
+
     port,
     host,
     pollingRate,
+
     dynamicTimeout,
     defaultTimeout,
+
     readingSpeed,
     minTimeout,
     maxTimeout,
+
     isWhitelist,
     appList,
+
     autoLaunch,
     minimize,
     minimizeOnStart,

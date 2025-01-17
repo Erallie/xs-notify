@@ -43,16 +43,21 @@ impl Default for XSNotifySettings {
     fn default() -> Self {
         Self {
             auto_run: true,
+
             port: 42069,
             host: String::from("localhost"),
             polling_rate: 250,
+
             dynamic_timeout: true,
             default_timeout: 5.0,
+
             reading_speed: 238.0,
             min_timeout: 2.0,
             max_timeout: 120.0,
+
             is_whitelist: false,
             app_list: Vec::new(),
+
             auto_launch: true,
             minimize: true,
             minimize_on_start: false,
