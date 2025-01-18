@@ -94,8 +94,8 @@
                         />
                         <div>
                             <MinMaxSlider
-                                label="Notification time"
-                                description="Minimum and maximum amount of notification time, specified in seconds."
+                                label="Min/Max Display Time"
+                                description="The minimum and maximum amount of time in seconds that notifications will be shown for."
                                 min={2}
                                 max={300}
                                 bind:values={rangeSlider}
