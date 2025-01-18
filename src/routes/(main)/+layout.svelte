@@ -1,7 +1,19 @@
 <script lang="ts">
     import { page } from "$app/state";
     import Toaster from "$lib/components/toaster/Toaster.svelte";
-    let { children } = $props();
+    import { invoke } from "@tauri-apps/api/core";
+    import { listen } from "@tauri-apps/api/event";
+    let { children, data } = $props();
+
+    let isRunning = $state(data.isRunning);
+
+    async function toggleRun() {
+        isRunning = await invoke<boolean>("toggle_run");
+    }
+
+    listen<boolean>("toggle-bridge", (event) => {
+        isRunning = event.payload;
+    });
 </script>
 
 <Toaster />
@@ -90,13 +102,17 @@
             class="bg-base-300 h-7 flex flex-row px-2 items-center justify-between"
         >
             <div class="font-medium">
-                Bridge Status: <span class="font-semibold text-success">On</span
+                Bridge Status: <span
+                    class="font-semibold {isRunning
+                        ? 'text-success'
+                        : 'text-error'}">{isRunning ? "On" : "Off"}</span
                 >
             </div>
             <input
                 type="checkbox"
                 class="toggle toggle-accent toggle-sm"
-                checked="checked"
+                bind:checked={isRunning}
+                onchange={toggleRun}
             />
         </div>
     </div>
