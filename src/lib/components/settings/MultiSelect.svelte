@@ -2,6 +2,8 @@
     let {
         selected = $bindable([]),
         examples = $bindable([]),
+        label,
+        description,
     }: {
         /**
          * *Bindable*, *Optional*
@@ -15,6 +17,16 @@
          * Bindable string array of examples or suggestions that show up in a dropdown menu above the input field.
          */
         examples?: string[];
+        /**
+         * The label appearing above the input.
+         */
+        label: string;
+        /**
+         * *Optional*
+         *
+         *  Sets the description label under the input
+         */
+        description?: string;
     } = $props();
 
     let inputValue: string = $state("");
@@ -41,15 +53,20 @@ The inputted items will be shown under the input field with a button to remove t
 # Attributes:
 - `selected` — Currently selected items. *Optional*, *Bindable*
 - `examples` — Examples or suggestions that will show up above the input field. *Optional*, *Bindable*
+- `label` — Label appearing above the input.
+- `description` — Description appearing below the input. *Optional*
 
 # Usage:
 ```svelte
     <MultiSelect
+        label="Label"
+        description="Description stuff here."
         bind:selected={stringArray}
         examples={["Example One", "Example Two"]} />
 -->
 
 <div class="flex flex-col gap-2">
+    <div class="text-lg font-semibold">{label}</div>
     <div class={filteredExamples.length > 0 ? "dropdown dropdown-top" : ""}>
         <div class="join">
             <input
@@ -63,24 +80,27 @@ The inputted items will be shown under the input field with a button to remove t
                     }
                 }}
                 class="join-item input-primary input focus:border-r-0 border-r-0 focus:outline-0 active:outline-none"
-                placeholder="Application name" />
+                placeholder="Application name"
+            />
             <button
                 onclick={() => {
                     addToSelected(inputValue);
                     inputValue = "";
                 }}
                 class="btn btn-neutral join-item border-l-0 no-animation border hover:border hover:border-l-0 hover:border-primary border-primary"
-                >Add</button>
+                >Add</button
+            >
         </div>
         {#if filteredExamples.length > 0}
             <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
             <ul
                 tabindex="0"
-                class="menu dropdown-content bg-neutral rounded-box z-[1] min-w-40 p-2 mb-2 shadow">
+                class="menu dropdown-content bg-neutral rounded-box z-[1] min-w-40 p-2 mb-2 shadow"
+            >
                 {#each examples.filter((v) => !selected.includes(v)) as app, i}
                     <li>
-                        <button onclick={() => addToSelected(app)}
-                            >{app}</button>
+                        <button onclick={() => addToSelected(app)}>{app}</button
+                        >
                     </li>
                 {/each}
             </ul>
@@ -100,14 +120,19 @@ The inputted items will be shown under the input field with a button to remove t
                         viewBox="0 0 24 24"
                         stroke-width="1.5"
                         stroke="currentColor"
-                        class="size-3">
+                        class="size-3"
+                    >
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            d="M6 18 18 6M6 6l12 12" />
+                            d="M6 18 18 6M6 6l12 12"
+                        />
                     </svg>
                 </button>
             </div>
         {/each}
+    </div>
+    <div class="label pt-0">
+        <span class="label-text text-pretty">{description}</span>
     </div>
 </div>

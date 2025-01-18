@@ -53,7 +53,10 @@
                 label="Use Whitelist"
                 description="Toggle this on if you want to treat the below setting as a whitelist instead of a blacklist."
             />
-            <MultiSelect bind:selected={newSettings.appList} />
+            <MultiSelect
+                label="Whitelisted applications"
+                bind:selected={newSettings.skippedApps}
+            />
         </SettingSection>
 
         <!-- Dynamic Notifications Settings -->
