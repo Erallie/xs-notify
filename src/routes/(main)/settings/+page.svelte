@@ -182,8 +182,9 @@
                 settings.</span
             >
             <button
-                onclick={() => {
-                    console.log("Restart action here.");
+                onclick={async () => {
+                    await invoke("update_settings", { settings: newSettings });
+                    invalidateAll();
                 }}
                 class="btn btn-secondary btn-sm h-10">Apply & Restart</button
             >
