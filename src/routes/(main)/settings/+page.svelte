@@ -1,11 +1,10 @@
 <script lang="ts">
-    import { invalidate, invalidateAll } from "$app/navigation";
+    import { invalidateAll } from "$app/navigation";
     import MinMaxSlider from "$lib/components/settings/MinMaxSlider.svelte";
     import MultiSelect from "$lib/components/settings/MultiSelect.svelte";
     import NumberInputBig from "$lib/components/settings/NumberInputBig.svelte";
     import SettingSection from "$lib/components/settings/SettingSection.svelte";
     import Switch from "$lib/components/settings/Switch.svelte";
-    import { type XSNotifySettings } from "$lib/types/types";
     import { invoke } from "@tauri-apps/api/core";
     import { fly, slide } from "svelte/transition";
 
