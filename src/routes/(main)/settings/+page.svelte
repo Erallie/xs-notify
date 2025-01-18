@@ -1,12 +1,17 @@
 <script lang="ts">
+    import { invalidate, invalidateAll } from "$app/navigation";
     import MinMaxSlider from "$lib/components/settings/MinMaxSlider.svelte";
     import MultiSelect from "$lib/components/settings/MultiSelect.svelte";
     import NumberInputBig from "$lib/components/settings/NumberInputBig.svelte";
     import SettingSection from "$lib/components/settings/SettingSection.svelte";
     import Switch from "$lib/components/settings/Switch.svelte";
+    import { type XSNotifySettings } from "$lib/types/types";
+    import { invoke } from "@tauri-apps/api/core";
     import { fly, slide } from "svelte/transition";
 
     let { data } = $props();
+
+    // let oldSettings = $state(data.settings);
 
     let newSettings = $state(data.settings);
 
@@ -54,8 +59,13 @@
                 description="Toggle this on if you want to treat the below setting as a whitelist instead of a blacklist."
             />
             <MultiSelect
-                label="Whitelisted applications"
-                bind:selected={newSettings.skippedApps}
+                label="{newSettings.isWhitelist
+                    ? 'Whitelisted'
+                    : 'Blacklisted'} applications"
+                bind:selected={newSettings.appList}
+                description="Apps that XS Notify {newSettings.isWhitelist
+                    ? 'will'
+                    : 'will not'} push notifications for."
             />
         </SettingSection>
 
@@ -168,7 +178,7 @@
     <div out:fly={{ y: 20 }} class="toast toast-center mb-16 z-10">
         <div class="alert alert-info gap-6">
             <span
-                >You need to restart the notification server to apply the new
+                >You must restart the notification bridge to apply the new
                 settings.</span
             >
             <button
