@@ -5,6 +5,7 @@
 
     let {
         label,
+        description,
         class: className,
         min,
         max,
@@ -14,6 +15,12 @@
          * The label appearing above the slider.
          */
         label: string;
+        /**
+         * *Optional*
+         *
+         *  Sets the description label under the input
+         */
+        description?: string;
         /**
          * *Optional*
          *
@@ -43,6 +50,7 @@ A slider with two handles to select a minimum and maximum value.
 
 # Properties:
 - `label` — Label appearing above the slider.
+- `description` — Description appearing below the input. *Optional*
 - `min` — The sliders minimum value.
 - `max` — The sliders maximum value.
 - `values` — The values of the input. Should be an array of two numbers. *Bindable*
@@ -52,6 +60,7 @@ A slider with two handles to select a minimum and maximum value.
   ```svelte
   <MinMaxSlider
     label="Slider Label"
+    description="Description of slider"
     min={10}
     max={90}
     bind:values={slider}
@@ -69,11 +78,22 @@ A slider with two handles to select a minimum and maximum value.
             variant="primary"
             {min}
             {max}
-            bind:value={values[0]} />
+            bind:value={values[0]}
+        />
         <NumberInputSmall
             variant="primary"
             {min}
             {max}
-            bind:value={values[1]} />
+            bind:value={values[1]}
+        />
     </div>
+    <div class="flex flex-row justify-between label">
+        <span class="label-text text-pretty">Minimum</span>
+        <span class="label-text text-pretty">Maximum</span>
+    </div>
+    {#if description}
+        <div class="label">
+            <span class="label-text text-pretty">{description}</span>
+        </div>
+    {/if}
 </div>
