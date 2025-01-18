@@ -33,7 +33,7 @@
         role="alert"
         class="alert justify-items-start bg-base-300 shadow-xl text-left"
     >
-        <div class="text-xl font-extrabold text-warning">Important Note</div>
+        <div class="text-xl font-extrabold text-error">Important Note</div>
         <p>
             In order for XS Notify to relay notifications to XS Overlay, the
             notification toast <em>must</em> show up on your screen. If the toast
