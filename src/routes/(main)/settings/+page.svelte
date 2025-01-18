@@ -33,32 +33,39 @@
         <!-- General Settings -->
         <SettingSection
             title="General"
-            description="General settings for XSNotify"
+            description="General settings for XS Notify"
         >
             <Switch
                 bind:checked={newSettings.autoRun}
                 class="toggle-primary"
-                label="Run on boot"
-                description="Runs XSNotify on boot."
+                label="Auto-start Bridge"
+                description="Start the notification bridge on application launch."
             />
             <NumberInputBig
                 variant="primary"
-                label="Polling rate"
-                description="The rate which XSNotify will check for new notifications."
+                label="Polling Rate"
+                description="The rate in milliseconds at which which XSNotify will check for new notifications."
                 bind:value={newSettings.pollingRate}
             />
-            <MultiSelect bind:selected={newSettings.skippedApps} />
+            <Switch
+                bind:checked={newSettings.isWhitelist}
+                class="toggle-primary"
+                label="Use Whitelist"
+                description="Toggle this on if you want to treat the below setting as a whitelist instead of a blacklist."
+            />
+            <MultiSelect bind:selected={newSettings.appList} />
         </SettingSection>
 
         <!-- Dynamic Notifications Settings -->
         <SettingSection
             title="Notifications"
-            description="Notification options for XSNotify"
+            description="Notification options for XS Notify"
         >
             <Switch
-                label="Enable Dynamic Notifications"
+                label="Dynamic Notifications"
                 class="toggle-primary"
                 bind:checked={newSettings.dynamicTimeout}
+                description="Dynamically sets the notification display time based on the length of the notification text."
             />
             {#if newSettings.dynamicTimeout}
                 <div
@@ -68,17 +75,18 @@
                     <div class="card-body">
                         <NumberInputBig
                             variant="primary"
-                            label="Reading speed"
-                            description="Your reading speed in WPM (Words per minute) which will be used to calculate the time notifications will be shown for."
+                            label="Reading Speed"
+                            description="Your reading speed in words per minute (WPM), which will be used to calculate the amount of time notifications will be shown for."
                             bind:value={newSettings.readingSpeed}
                         />
                         <div>
                             <MinMaxSlider
-                                label="Notification time"
+                                label="Min/Max Display Time"
                                 min={2}
                                 max={300}
                                 bind:values={rangeSlider}
                             />
+                            <!-- Make sure to specify that this is in seconds! -->
                             <div class="flex flex-row justify-between label">
                                 <span class="label-text text-pretty"
                                     >Minimum</span
@@ -94,8 +102,8 @@
                 <div transition:slide>
                     <NumberInputBig
                         variant="primary"
-                        label="Notification timeout"
-                        description="The amount of time a notification will be shown."
+                        label="Display Time"
+                        description="The amount of time a notification will be shown for in seconds."
                         bind:value={newSettings.defaultTimeout}
                     />
                 </div>
@@ -105,7 +113,7 @@
         <!-- XSOverlay Settings -->
         <SettingSection
             title="XSOverlay"
-            description="Settings for XSNotify to connect to XSOverlay"
+            description="Settings for XS Notify to connect to XSOverlay"
         >
             <div>
                 <div class="text-lg font-semibold mb-2">Hostname</div>
@@ -124,6 +132,29 @@
                 label="Port"
                 description="The port XSOverlay is accessible on."
                 bind:value={newSettings.port}
+            />
+        </SettingSection>
+        <SettingSection
+            title="Startup"
+            description="Launch settings for XS Notify"
+        >
+            <Switch
+                bind:checked={newSettings.autoLaunch}
+                class="toggle-primary"
+                label="Auto-launch"
+                description="Launch XS Notify on system startup."
+            />
+            <Switch
+                bind:checked={newSettings.minimize}
+                class="toggle-primary"
+                label="Minimize to Tray"
+                description="Minimize to the system tray instead of closing."
+            />
+            <Switch
+                bind:checked={newSettings.minimizeOnStart}
+                class="toggle-primary"
+                label="Start Minimized"
+                description="Minimize XS Notify to the system tray when it launches."
             />
         </SettingSection>
     </div>
