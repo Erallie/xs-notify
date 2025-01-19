@@ -132,8 +132,8 @@
         </p>
         <div class="modal-action gap-4">
             <button
-                onclick={() => {
-                    isRunning = false;
+                onclick={async () => {
+                    isRunning = await invoke<boolean>("toggle_run");
                     confirmModal.close();
                 }}
                 class="btn btn-error">Stop bridge</button
