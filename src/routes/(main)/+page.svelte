@@ -1,13 +1,10 @@
-<script lang="ts">
-    import AboutSection from "./AboutSection.svelte";
-</script>
-
-<section class="container space-y-12">
+<section class="space-y-12">
     <h1 class="text-center text-4xl font-extrabold text-nowrap tracking-wide">
         About
     </h1>
-    <AboutSection title="General"
-        ><p>
+    <div class="space-y-4 text-pretty">
+        <h2 class="text-center text-2xl font-bold">Installation</h2>
+        <p>
             XS Notify was forked from <a
                 href="https://github.com/bluskript/xsoverlay-notifier"
                 target="_blank"
@@ -33,23 +30,50 @@
             >
             to listen for notifications.
         </p>
-        <div class="collapse collapse-open border-base-300 bg-base-300">
-            <div class="collapse-title text-xl font-extrabold text-warning">
-                Important Note
-            </div>
-            <div class="collapse-content">
-                <p>
-                    In order for XS Notify to relay notifications to XS Overlay,
-                    the notification toast <em>must</em> show up on your screen.
-                    If the toast does not appear on your screen (like for example,
-                    if the toast is blocked because you are in full screen), the
-                    notification will not be pushed to XSOverlay.
-                </p>
-            </div>
-        </div></AboutSection
+    </div>
+
+    <div
+        role="alert"
+        class="alert justify-items-start bg-base-300 shadow-xl text-left"
     >
-    <AboutSection title="Auto-launch XS Notify"
-        ><p>
+        <div class="text-xl font-extrabold text-error">Important Note</div>
+        <p>
+            In order for XS Notify to relay notifications to XS Overlay, the
+            notification toast <em>must</em> show up on your screen. If the toast
+            does not appear on your screen (like for example, if the toast is blocked
+            because you are in full screen), the notification will not be pushed
+            to XSOverlay.
+        </p>
+    </div>
+
+    <div class="space-y-4 text-pretty">
+        <h2 class="text-center text-2xl font-bold">Installation</h2>
+        <ol class="list-decimal ml-8">
+            <li>
+                Head over to the <a
+                    href="https://github.com/Erallie/xs-notify/releases"
+                    target="_blank"
+                    class="link">Releases</a
+                >
+                page and find the latest release.
+            </li>
+            <li>
+                Under <strong>Assets</strong>, download
+                <code>xs-notify.exe</code>.
+            </li>
+            <li>
+                Run <code>xs-notify.exe</code>.
+            </li>
+            <li>
+                Start the notification bridge when you want your notifications
+                pushed to XSOverlay.
+            </li>
+        </ol>
+    </div>
+
+    <div class="space-y-4 text-pretty">
+        <h2 class="text-center text-2xl font-bold">Auto-launch XS Notify</h2>
+        <p>
             XS Notify has a setting you can enable to have it launch
             automatically when you start your computer.
         </p>
@@ -74,9 +98,11 @@
                 >.
             </li>
             <li>Move the shortcut to the folder that opens.</li>
-        </ol></AboutSection
-    >
-    <AboutSection title="Support">
+        </ol>
+    </div>
+
+    <div class="space-y-4 text-pretty">
+        <h2 class="text-center text-2xl font-bold">Support</h2>
         <p>
             If you have any problems with this tool or want to request a
             feature, please create an <a
@@ -85,5 +111,5 @@
                 class="link">issue</a
             >, and I will try to address it to the best of my ability!
         </p>
-    </AboutSection>
+    </div>
 </section>

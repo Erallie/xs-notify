@@ -1,4 +1,4 @@
-use crate::{error::XSNotifyError, XSNotify};
+use crate::{error::XSNotifyError, run_bridge, XSNotify};
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
@@ -7,6 +7,7 @@ use std::{
 };
 use tauri::{ipc::InvokeError, Manager, State};
 use tauri_plugin_autostart::ManagerExt;
+use tokio::sync::Notify;
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -132,6 +133,9 @@ pub fn update_settings(settings: XSNotifySettings, notify: State<Arc<Mutex<XSNot
             log::error!("Failed to update settings: {}", e);
         }
     };
+
+    notify.cancel.notify_waiters();
+    notify.cancel = run_bridge(notify.clone());
 
     Ok(())
 }

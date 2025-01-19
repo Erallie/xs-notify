@@ -42,7 +42,7 @@
         if (
             consoleEl &&
             consoleEl.scrollTop >=
-                consoleEl.scrollHeight - consoleEl.clientHeight * 1.5
+                consoleEl.scrollHeight - consoleEl.clientHeight * 1.1
         ) {
             isAtBottom = true;
         }
@@ -80,13 +80,13 @@
     }
 </script>
 
-<section class="container">
+<section id="console-container" class="container">
     <h1
         class="text-center text-4xl font-extrabold text-nowrap tracking-wide mb-12"
     >
         Console
     </h1>
-    <div class="mockup-code overflow-y-auto" id="console-el">
+    <div id="console-el" class="mockup-code overflow-y-auto">
         {#each logElement as log}
             <pre class="text-wrap -indent-12 pl-12 {log.extraClasses}"><code
                     ><span class={log.infoCls}>{log.info}</span> {log.msg}</code
