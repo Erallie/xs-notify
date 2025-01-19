@@ -26,32 +26,22 @@
 
     <!-- Bottom Navigation -->
     <div class="btm-nav z-10">
-        <div class="bg-base-300 max-w-fit px-2">
-            <label
-                class="label cursor-pointer flex flex-col justify-between gap-1"
-            >
-                <input
-                    type="checkbox"
-                    onclickcapture={(e) => {
-                        if (isRunning) {
-                            e.preventDefault();
-                            confirmModal.showModal();
-                        } else {
-                            toggleRun();
-                        }
-                    }}
-                    class="toggle toggle-accent"
-                    bind:checked={isRunning}
-                />
-                <span class="label-text"
-                    >Bridge Status: <span
-                        class="font-semibold {isRunning
-                            ? 'text-success'
-                            : 'text-warning'}">{isRunning ? "On" : "Off"}</span
-                    ></span
-                >
-            </label>
-        </div>
+        <button
+            id="bridge-button"
+            class="{isRunning
+                ? 'bg-error text-error-content'
+                : 'bg-success text-success-content'} px-6 font-semibold"
+            onclickcapture={(e) => {
+                if (isRunning) {
+                    e.preventDefault();
+                    confirmModal.showModal();
+                } else {
+                    toggleRun();
+                }
+            }}
+        >
+            {isRunning ? "Stop" : "Start"} Bridge
+        </button>
         <a
             href="/console"
             class="transition-all {page.url.pathname === '/console'
