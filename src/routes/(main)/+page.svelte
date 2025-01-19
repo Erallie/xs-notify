@@ -16,7 +16,10 @@
             and modified by
             <a href="https://github.com/Erallie" target="_blank" class="link"
                 >Erika Gozar</a
-            >, with the help of Zelaf and Jakob.
+            >, with the help of Zelaf and
+            <a href="https://github.com/Jakobg1215" target="_blank" class="link"
+                >Jakob</a
+            >.
         </p>
         <p>
             This is a desktop application that runs alongside XSOverlay and
