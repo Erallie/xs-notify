@@ -9,27 +9,12 @@
 
     let isRunning = $state(data.isRunning);
 
-    let toggleRunText = $state(setRunText());
-
-    function setRunText() {
-        switch (isRunning) {
-            case true:
-                return "Stop Bridge";
-            case false:
-                return "Start Bridge";
-        }
-    }
-
     async function toggleRun() {
         isRunning = await invoke<boolean>("toggle_run");
-        toggleRunText = setRunText();
     }
 
     listen<boolean>("toggle-bridge", (event) => {
         isRunning = event.payload;
-        toggleRunText = setRunText();
-        // console.error("testing");
-        // console.log(`isRunning = ${isRunning}`);
     });
 </script>
 
@@ -79,8 +64,11 @@
 
             <button
                 id="bridge-button"
-                class="btn btn-secondary absolute bottom-10 self-center"
-                onclick={toggleRun}>{toggleRunText}</button
+                class="btn {isRunning
+                    ? 'bg-warning text-warning-content hover:bg-warning hover:text-warning-content'
+                    : 'bg-success text-success-content hover:bg-success hover:text-success-content'} absolute bottom-10 self-center"
+                onclick={toggleRun}
+                >{isRunning ? "Stop" : "Start"} Bridge</button
             >
         </nav>
     </div>
