@@ -79,12 +79,14 @@ A slider with two handles to select a minimum and maximum value.
             {min}
             {max}
             bind:value={values[0]}
+            changeAmount={1}
         />
         <NumberInputSmall
             variant="primary"
             {min}
             {max}
             bind:value={values[1]}
+            changeAmount={10}
         />
     </div>
     <div class="flex flex-row justify-between label">
