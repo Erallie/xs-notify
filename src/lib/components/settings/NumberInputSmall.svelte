@@ -66,7 +66,7 @@
          *
          * The amount the value will change when clicking on the buttons.
          */
-        changeAmount: number;
+        changeAmount?: number;
         /**
          * *Optional*
          *
