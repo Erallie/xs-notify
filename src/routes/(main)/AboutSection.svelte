@@ -2,7 +2,10 @@
     let { children, title } = $props();
 </script>
 
-<div class="space-y-6 text-pretty">
-    <h2 class="text-center text-2xl font-bold">{title}</h2>
-    {@render children()}
+<div class="collapse join-item collapse-plus bg-base-300">
+    <input type="radio" name="about" />
+    <h2 class="collapse-title text-center text-2xl font-bold">{title}</h2>
+    <div class="collapse-content space-y-6 text-pretty">
+        {@render children()}
+    </div>
 </div>
