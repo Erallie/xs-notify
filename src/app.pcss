@@ -2,9 +2,76 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+    /* slider main background color */
+    --range-slider: theme(colors.base-content/10%);
+    /* inactive handle color */
+    --range-handle-inactive: theme(colors.base-100);
+    /* non-focussed handle color */
+    --range-handle: theme(colors.base-100);
+    /* focussed handle color */
+    --range-handle-focus: theme(colors.base-100);
+    /* handle border color */
+    --range-handle-border: theme(colors.accent);
+    /* inactive range bar background color */
+    --range-range-inactive: theme(colors.accent);
+    /* active range background color */
+    --range-range: theme(colors.accent);
+    /* inactive floating label background color */
+    --range-float-inactive: var(--range-handle-inactive);
+    /* floating label background color */
+    --range-float: var(--range-handle-focus);
+    /* text color on floating label */
+    --range-float-text: white;
 
+    .rangeSlider {
+        border-radius: 100px;
+        overflow: visible;
+        transition: opacity 0.2s ease;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        font-size: 1rem;
+        margin: 0;
+    }
 
-button>svg {
+    .rangeSlider .rangeBar {
+        position: absolute;
+        display: block;
+        transition: background 0.2s ease;
+        border-radius: 0rem;
+        height: 1.5rem;
+        top: 0.25rem;
+        translate: 0 -50%;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        z-index: 1;
+        @apply self-center;
+    }
+
+    .rangeSlider .rangeHandle {
+        position: absolute;
+        display: block;
+        height: 1.5em;
+        width: 1.5em;
+        top: 0.25em;
+        bottom: auto;
+        transform: translateY(-50%) translateX(-50%);
+        z-index: 2;
+    }
+
+    .rangeSlider > .rangeHandle > .rangeNub {
+        @apply rounded-box bg-base-100 relative h-6 w-6 border-none;
+        box-shadow: 0 0 0 3px theme(colors.accent) inset;
+    }
+
+    .rangeSlider.range:not(.min):not(.max) .rangeNub {
+        @apply rounded-box;
+    }
+}
+
+button > svg {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -13,7 +80,7 @@ button>svg {
     height: 50%;
 }
 
-button:has(>svg) {
+button:has(> svg) {
     position: relative;
 }
 #bridge-button {
@@ -23,5 +90,5 @@ button:has(>svg) {
     height: calc(100dvh - 10rem);
 }
 #console-el {
-    max-height: calc(100% - 5.5rem)
+    max-height: calc(100% - 5.5rem);
 }
