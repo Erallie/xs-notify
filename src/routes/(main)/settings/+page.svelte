@@ -50,6 +50,7 @@
                 label="Polling Rate"
                 description="The rate in milliseconds at which which XSNotify will check for new notifications."
                 bind:value={newSettings.pollingRate}
+                changeAmount={10}
             />
             <Switch
                 bind:checked={newSettings.isWhitelist}
@@ -90,6 +91,7 @@
                             label="Reading Speed"
                             description="Your reading speed in words per minute (WPM), which will be used to calculate the amount of time notifications will be shown for."
                             bind:value={newSettings.readingSpeed}
+                            changeAmount={15}
                         />
                         <div>
                             <MinMaxSlider
@@ -109,6 +111,7 @@
                         label="Display Time"
                         description="The amount of time a notification will be shown for in seconds."
                         bind:value={newSettings.defaultTimeout}
+                        changeAmount={1}
                     />
                 </div>
             {/if}
@@ -136,6 +139,7 @@
                 label="Port"
                 description="The port XSOverlay is accessible on."
                 bind:value={newSettings.port}
+                changeAmount={10}
             />
         </SettingSection>
         <SettingSection
