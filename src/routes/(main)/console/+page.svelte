@@ -42,7 +42,7 @@
         if (
             consoleEl &&
             consoleEl.scrollTop >=
-                consoleEl.scrollHeight - consoleEl.clientHeight * 1.5
+                consoleEl.scrollHeight - consoleEl.clientHeight * 1.1
         ) {
             isAtBottom = true;
         }
