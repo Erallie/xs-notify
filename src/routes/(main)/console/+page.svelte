@@ -86,7 +86,7 @@
     >
         Console
     </h1>
-    <div class="mockup-code overflow-y-auto" id="console-el">
+    <div id="console-el" class="mockup-code overflow-y-auto">
         {#each logElement as log}
             <pre class="text-wrap -indent-12 pl-12 {log.extraClasses}"><code
                     ><span class={log.infoCls}>{log.info}</span> {log.msg}</code

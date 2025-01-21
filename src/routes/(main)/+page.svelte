@@ -86,7 +86,7 @@
                 to listen for notifications.
             </p>
             <div class="collapse collapse-open border-base-300 bg-base-100">
-                <div class="collapse-title text-xl font-extrabold text-warning">
+                <div class="collapse-title text-xl font-extrabold text-error">
                     Important Note
                 </div>
                 <div class="collapse-content">

@@ -1,161 +1,189 @@
 <script lang="ts">
-    import { WhichSetting } from "$lib/types/types";
-    import Setting from "./Setting.svelte";
-    import SettingSection from "./SettingSection.svelte";
+    import { invalidateAll } from "$app/navigation";
+    import MinMaxSlider from "$lib/components/settings/MinMaxSlider.svelte";
+    import MultiSelect from "$lib/components/settings/MultiSelect.svelte";
+    import NumberInputBig from "$lib/components/settings/NumberInputBig.svelte";
+    import SettingSection from "$lib/components/settings/SettingSection.svelte";
+    import Switch from "$lib/components/settings/Switch.svelte";
+    import { invoke } from "@tauri-apps/api/core";
+    import { fly, slide } from "svelte/transition";
 
     let { data } = $props();
 
-    let showEnabled = $state(data.settings.dynamicTimeout);
-    function toggleDynamicSetting(value: boolean) {
-        showEnabled = value;
-    }
+    // let oldSettings = $state(data.settings);
 
-    let listTitle = $state(returnListTitle(data.settings.isWhitelist));
-    function returnListTitle(value: boolean) {
-        switch (value) {
-            case true:
-                return "App Whitelist";
-            case false:
-                return "App Blacklist";
-        }
-    }
+    let newSettings = $state(data.settings);
 
-    let listDesc = $state(returnListDesc(data.settings.isWhitelist));
+    let rangeSlider: number[] = $state([
+        newSettings.minTimeout,
+        newSettings.maxTimeout,
+    ]);
 
-    function returnListDesc(value: boolean) {
-        switch (value) {
-            case true:
-                return "will";
-            case false:
-                return "will not";
-        }
-    }
+    let optionsChanged: boolean = $derived(
+        JSON.stringify(newSettings) !== JSON.stringify(data.settings),
+    );
 
-    function setListTitleAndDesc(value: boolean) {
-        listTitle = returnListTitle(value);
-        listDesc = returnListDesc(value);
-    }
+    $effect(() => {
+        newSettings.minTimeout = rangeSlider[0];
+        newSettings.maxTimeout = rangeSlider[1];
+    });
 </script>
 
-<section class="container">
+<div class="container">
     <h1 class="text-center text-4xl font-extrabold text-nowrap tracking-wide">
         Settings
     </h1>
-    {#await data.settings}
-        loading settings... <!-- replace with something to display while settings are loading -->
-    {:then settings}
-        <div class="my-12">
-            <!-- General Settings -->
-            <SettingSection title="General" warning={true}
-                ><Setting
-                    title="Auto-run"
-                    description="Runs the notification bridge on application launch."
-                    {settings}
-                    setting={WhichSetting.autoRun}
-                /><Setting
-                    title="Polling Rate"
-                    description="The rate at which XS Notify checks for new notifications, specified in milliseconds."
-                    warning={true}
-                    {settings}
-                    setting={WhichSetting.pollingRate}
+    <div class="my-12 space-y-16">
+        <!-- General Settings -->
+        <SettingSection
+            title="General"
+            description="General settings for XS Notify"
+        >
+            <Switch
+                bind:checked={newSettings.autoRun}
+                class="toggle-primary"
+                label="Auto-start Bridge"
+                description="Start the notification bridge on application launch."
+            />
+            <NumberInputBig
+                variant="primary"
+                label="Polling Rate"
+                description="The rate in milliseconds at which which XSNotify will check for new notifications."
+                bind:value={newSettings.pollingRate}
+                changeAmount={10}
+            />
+            <Switch
+                bind:checked={newSettings.isWhitelist}
+                class="toggle-primary"
+                label="Use Whitelist"
+                description="Toggle this on if you want to treat the below setting as a whitelist instead of a blacklist."
+            />
+            <MultiSelect
+                label="{newSettings.isWhitelist
+                    ? 'Whitelisted'
+                    : 'Blacklisted'} applications"
+                bind:selected={newSettings.appList}
+                description="Apps that XS Notify {newSettings.isWhitelist
+                    ? 'will'
+                    : 'will not'} push notifications for."
+            />
+        </SettingSection>
+
+        <!-- Dynamic Notifications Settings -->
+        <SettingSection
+            title="Notifications"
+            description="Notification options for XS Notify"
+        >
+            <Switch
+                label="Dynamic Notifications"
+                class="toggle-primary"
+                bind:checked={newSettings.dynamicTimeout}
+                description="Dynamically sets the notification display time based on the length of the notification text."
+            />
+            {#if newSettings.dynamicTimeout}
+                <div
+                    transition:slide
+                    class="space-y-8 card card-bordered card-compact shadow-xl bg-neutral/40 text-neutral-content"
+                >
+                    <div class="card-body">
+                        <NumberInputBig
+                            variant="primary"
+                            label="Reading Speed"
+                            description="Your reading speed in words per minute (WPM), which will be used to calculate the amount of time notifications will be shown for."
+                            bind:value={newSettings.readingSpeed}
+                            changeAmount={15}
+                        />
+                        <div>
+                            <MinMaxSlider
+                                label="Min/Max Display Time"
+                                description="The minimum and maximum amount of time in seconds that notifications will be shown for."
+                                min={2}
+                                max={300}
+                                bind:values={rangeSlider}
+                            />
+                        </div>
+                    </div>
+                </div>
+            {:else}
+                <div transition:slide>
+                    <NumberInputBig
+                        variant="primary"
+                        label="Display Time"
+                        description="The amount of time a notification will be shown for in seconds."
+                        bind:value={newSettings.defaultTimeout}
+                        changeAmount={1}
+                    />
+                </div>
+            {/if}
+        </SettingSection>
+
+        <!-- XSOverlay Settings -->
+        <SettingSection
+            title="XSOverlay"
+            description="Settings for XS Notify to connect to XSOverlay"
+        >
+            <div>
+                <div class="text-lg font-semibold mb-2">Hostname</div>
+                <input
+                    bind:value={newSettings.host}
+                    class="input input-primary"
                 />
-                <Setting
-                    title="Use Whitelist"
-                    description="Toggle this on if you want to treat the below setting as a whitelist instead of a blacklist."
-                    warning={true}
-                    {settings}
-                    setting={WhichSetting.isWhitelist}
-                    callback={setListTitleAndDesc}
-                />
-                <Setting
-                    title={listTitle}
-                    description="A list of names of apps that XS Notify <strong>{listDesc}</strong> push notifications for."
-                    warning={true}
-                    {settings}
-                    setting={WhichSetting.appList}
-                /></SettingSection
+                <div class="label">
+                    <span class="label-text text-pretty">
+                        The IP or hostname that XSOverlay is running on.
+                    </span>
+                </div>
+            </div>
+            <NumberInputBig
+                variant="primary"
+                label="Port"
+                description="The port XSOverlay is accessible on."
+                bind:value={newSettings.port}
+                changeAmount={10}
+            />
+        </SettingSection>
+        <SettingSection
+            title="Startup"
+            description="Launch settings for XS Notify"
+        >
+            <Switch
+                bind:checked={newSettings.autoLaunch}
+                class="toggle-primary"
+                label="Auto-launch"
+                description="Launch XS Notify on system startup."
+            />
+            <Switch
+                bind:checked={newSettings.minimize}
+                class="toggle-primary"
+                label="Minimize to Tray"
+                description="Minimize to the system tray instead of closing."
+            />
+            <Switch
+                bind:checked={newSettings.minimizeOnStart}
+                class="toggle-primary"
+                label="Start Minimized"
+                description="Minimize XS Notify to the system tray when it launches."
+            />
+        </SettingSection>
+    </div>
+</div>
+
+<!-- Alert of changed options -->
+{#if optionsChanged}
+    <div out:fly={{ y: 20 }} class="toast toast-center mb-16 z-10">
+        <div class="alert alert-info gap-6 bg-secondary text-secondary-content">
+            <span
+                >You must restart the notification bridge to apply the new
+                settings.</span
             >
-            <!-- Dynamic Notifications Settings -->
-            <SettingSection title="Notifications" warning={true}>
-                <Setting
-                    title="Dynamic Notifications"
-                    description="Dynamically sets the notification display time based on the length of the notification text."
-                    warning={true}
-                    {settings}
-                    setting={WhichSetting.dynamicTimeout}
-                    callback={toggleDynamicSetting}
-                />
-                {#if showEnabled}
-                    <Setting
-                        title="Reading Speed"
-                        description="Your reading speed in words per minute (WPM), which will be used to calculate the display time for dynamic notifications."
-                        warning={true}
-                        {settings}
-                        setting={WhichSetting.readingSpeed}
-                    />
-                    <Setting
-                        title="Minimum notification time"
-                        description="The minimum amount of time a notification will be displayed, in seconds."
-                        warning={true}
-                        {settings}
-                        setting={WhichSetting.minTimeout}
-                    />
-                    <Setting
-                        title="Maximum notification time"
-                        description="The maximum amount of time a notification will be displayed, in seconds."
-                        warning={true}
-                        {settings}
-                        setting={WhichSetting.maxTimeout}
-                    />
-                {:else if !showEnabled}
-                    <Setting
-                        title="Notification time"
-                        description="The amount of time for which a notification will be displayed, in seconds"
-                        warning={true}
-                        {settings}
-                        setting={WhichSetting.defaultTimeout}
-                    />
-                {/if}
-            </SettingSection>
-
-            <!-- XSOverlay Settings -->
-            <SettingSection title="Bridge Connection" warning={true}>
-                <Setting
-                    title="Port"
-                    description="The port that XSOverlay is listening on."
-                    warning={true}
-                    {settings}
-                    setting={WhichSetting.port}
-                />
-                <Setting
-                    title="Host"
-                    description="The hostname that XSOverlay is listening on."
-                    warning={true}
-                    {settings}
-                    setting={WhichSetting.host}
-                />
-            </SettingSection>
-
-            <SettingSection title="Startup">
-                <Setting
-                    title="Auto-launch"
-                    description="Launch XS Notify on system startup."
-                    {settings}
-                    setting={WhichSetting.autoLaunch}
-                />
-                <Setting
-                    title="Minimize to Tray"
-                    description="Minimize to the system tray instead of closing."
-                    {settings}
-                    setting={WhichSetting.minimize}
-                />
-                <Setting
-                    title="Start Minimized"
-                    description="Minimize XS Notify to the system tray when it launches."
-                    {settings}
-                    setting={WhichSetting.minimizeOnStart}
-                />
-            </SettingSection>
+            <button
+                onclick={async () => {
+                    await invoke("update_settings", { settings: newSettings });
+                    invalidateAll();
+                }}
+                class="btn btn-primary text-primary-content btn-sm h-10"
+                >Apply & Restart</button
+            >
         </div>
-    {/await}
-</section>
+    </div>
+{/if}
