@@ -171,7 +171,7 @@
 <!-- Alert of changed options -->
 {#if optionsChanged}
     <div out:fly={{ y: 20 }} class="toast toast-center mb-16 z-10">
-        <div class="alert alert-info gap-6">
+        <div class="alert alert-info gap-6 bg-secondary text-secondary-content">
             <span
                 >You must restart the notification bridge to apply the new
                 settings.</span
@@ -181,7 +181,8 @@
                     await invoke("update_settings", { settings: newSettings });
                     invalidateAll();
                 }}
-                class="btn btn-secondary btn-sm h-10">Apply & Restart</button
+                class="btn btn-primary text-primary-content btn-sm h-10"
+                >Apply & Restart</button
             >
         </div>
     </div>
