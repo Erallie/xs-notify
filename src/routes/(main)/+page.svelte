@@ -1,4 +1,3 @@
-
 <script lang="ts">
     import AboutSection from "./AboutSection.svelte";
 </script>
