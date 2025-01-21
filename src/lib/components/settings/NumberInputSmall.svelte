@@ -23,7 +23,7 @@
          *
          * Callback that runs every time the value changes
          */
-        onchange?: ChangeEventHandler<HTMLInputElement>;
+        onchange?: ChangeEventHandler<HTMLElement>;
         /**
          * *Optional*
          *
@@ -136,8 +136,9 @@ Smaller number input with buttons to change the value.
         />
         <div class="flex flex-col w-8 gap-px p-px">
             <button
-                onclick={() => {
+                onclick={(event) => {
                     if (value !== max) value = value + changeAmount;
+                    if (onchange) onchange(event);
                 }}
                 aria-label="Increase number"
                 class="btn btn-xs p-0 min-h-4 max-h-4 rounded-b-none
@@ -170,8 +171,9 @@ Smaller number input with buttons to change the value.
                 </svg></button
             >
             <button
-                onclick={() => {
+                onclick={(event) => {
                     if (value !== min) value = value - changeAmount;
+                    if (onchange) onchange(event);
                 }}
                 aria-label="Decrease number"
                 class="btn btn-xs p-0 min-h-4 max-h-4 rounded-t-none

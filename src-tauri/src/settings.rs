@@ -134,8 +134,10 @@ pub fn update_settings(settings: XSNotifySettings, notify: State<Arc<Mutex<XSNot
         }
     };
 
-    notify.cancel.notify_waiters();
-    notify.cancel = run_bridge(notify.clone());
+    if notify.running {
+        notify.cancel.notify_waiters();
+        notify.cancel = run_bridge(notify.clone());
+    }
 
     Ok(())
 }

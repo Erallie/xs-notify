@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { invalidateAll } from "$app/navigation";
+    import { invalidate, invalidateAll } from "$app/navigation";
     import MinMaxSlider from "$lib/components/settings/MinMaxSlider.svelte";
     import MultiSelect from "$lib/components/settings/MultiSelect.svelte";
     import NumberInputBig from "$lib/components/settings/NumberInputBig.svelte";
@@ -27,6 +27,14 @@
         newSettings.minTimeout = rangeSlider[0];
         newSettings.maxTimeout = rangeSlider[1];
     });
+
+    async function onChange() {
+        let isRunning = await invoke<boolean>("get_running");
+        if (!isRunning) {
+            await invoke("update_settings", { settings: newSettings });
+        }
+        invalidateAll();
+    }
 </script>
 
 <div class="container">
@@ -44,6 +52,7 @@
                 class="toggle-primary"
                 label="Auto-start Bridge"
                 description="Start the notification bridge on application launch."
+                onchange={onChange}
             />
             <NumberInputBig
                 variant="primary"
@@ -51,12 +60,14 @@
                 description="The rate in milliseconds at which which XSNotify will check for new notifications."
                 bind:value={newSettings.pollingRate}
                 changeAmount={10}
+                onchange={onChange}
             />
             <Switch
                 bind:checked={newSettings.isWhitelist}
                 class="toggle-primary"
                 label="Use Whitelist"
                 description="Toggle this on if you want to treat the below setting as a whitelist instead of a blacklist."
+                onchange={onChange}
             />
             <MultiSelect
                 label="{newSettings.isWhitelist
@@ -66,6 +77,7 @@
                 description="Apps that XS Notify {newSettings.isWhitelist
                     ? 'will'
                     : 'will not'} push notifications for."
+                onchange={onChange}
             />
         </SettingSection>
 
@@ -79,6 +91,7 @@
                 class="toggle-primary"
                 bind:checked={newSettings.dynamicTimeout}
                 description="Dynamically sets the notification display time based on the length of the notification text."
+                onchange={onChange}
             />
             {#if newSettings.dynamicTimeout}
                 <div
@@ -92,6 +105,7 @@
                             description="Your reading speed in words per minute (WPM), which will be used to calculate the amount of time notifications will be shown for."
                             bind:value={newSettings.readingSpeed}
                             changeAmount={15}
+                            onchange={onChange}
                         />
                         <div>
                             <MinMaxSlider
@@ -100,6 +114,7 @@
                                 min={2}
                                 max={300}
                                 bind:values={rangeSlider}
+                                onchange={onChange}
                             />
                         </div>
                     </div>
@@ -112,6 +127,7 @@
                         description="The amount of time a notification will be shown for in seconds."
                         bind:value={newSettings.defaultTimeout}
                         changeAmount={1}
+                        onchange={onChange}
                     />
                 </div>
             {/if}
@@ -127,6 +143,7 @@
                 <input
                     bind:value={newSettings.host}
                     class="input input-primary"
+                    onchange={onChange}
                 />
                 <div class="label">
                     <span class="label-text text-pretty">
@@ -140,6 +157,7 @@
                 description="The port XSOverlay is accessible on."
                 bind:value={newSettings.port}
                 changeAmount={10}
+                onchange={onChange}
             />
         </SettingSection>
         <SettingSection
@@ -151,25 +169,28 @@
                 class="toggle-primary"
                 label="Auto-launch"
                 description="Launch XS Notify on system startup."
+                onchange={onChange}
             />
             <Switch
                 bind:checked={newSettings.minimize}
                 class="toggle-primary"
                 label="Minimize to Tray"
                 description="Minimize to the system tray instead of closing."
+                onchange={onChange}
             />
             <Switch
                 bind:checked={newSettings.minimizeOnStart}
                 class="toggle-primary"
                 label="Start Minimized"
                 description="Minimize XS Notify to the system tray when it launches."
+                onchange={onChange}
             />
         </SettingSection>
     </div>
 </div>
 
 <!-- Alert of changed options -->
-{#if optionsChanged}
+{#if optionsChanged && data.isRunning}
     <div out:fly={{ y: 20 }} class="toast toast-center mb-16 z-10">
         <div class="alert alert-info gap-6 bg-secondary text-secondary-content">
             <span

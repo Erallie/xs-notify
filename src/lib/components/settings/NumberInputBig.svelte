@@ -23,7 +23,7 @@
          *
          * Callback that runs every time the value changes
          */
-        onchange?: ChangeEventHandler<HTMLInputElement>;
+        onchange?: ChangeEventHandler<HTMLElement>;
         /**
          * *Optional*
          *
@@ -122,8 +122,9 @@ Number input with buttons to change the value.
                         : ''}"
     >
         <button
-            onclick={() => {
+            onclick={(event) => {
                 if (value !== max) value = value - changeAmount;
+                if (onchange) onchange(event);
             }}
             aria-label="Decrease number"
             class="btn text-lg rounded-r-none {variant === 'primary'
@@ -179,8 +180,9 @@ Number input with buttons to change the value.
                           : variant === 'error'
                             ? 'btn-error'
                             : ''}"
-            onclick={() => {
+            onclick={(event) => {
                 if (value !== max) value = value + changeAmount;
+                if (onchange) onchange(event);
             }}
             ><svg
                 xmlns="http://www.w3.org/2000/svg"

@@ -1,9 +1,13 @@
 <script lang="ts">
+    import { invalidateAll } from "$app/navigation";
+    import type { ChangeEventHandler } from "svelte/elements";
+
     let {
         selected = $bindable([]),
         examples = $bindable([]),
         label,
         description,
+        onchange,
     }: {
         /**
          * *Bindable*, *Optional*
@@ -27,6 +31,12 @@
          *  Sets the description label under the input
          */
         description?: string;
+        /**
+         * *Optional*
+         *
+         * Callback that runs every time the value changes
+         */
+        onchange?: ChangeEventHandler<HTMLElement>;
     } = $props();
 
     let inputValue: string = $state("");
@@ -34,14 +44,16 @@
         examples.filter((v) => !selected.includes(v)),
     );
 
-    function addToSelected(string: string) {
+    function addToSelected(string: string, event: Event) {
         if (string !== "") {
             selected.push(string);
         }
+        if (onchange) onchange(event);
     }
 
-    function removeFromSelected(string: string) {
+    function removeFromSelected(string: string, event: Event) {
         selected = selected.filter((selected) => selected !== string);
+        if (onchange) onchange(event);
     }
 </script>
 
@@ -55,6 +67,7 @@ The inputted items will be shown under the input field with a button to remove t
 - `examples` — Examples or suggestions that will show up above the input field. *Optional*, *Bindable*
 - `label` — Label appearing above the input.
 - `description` — Description appearing below the input. *Optional*
+- `onchange` — Callback for when the value changes. *Optional*
 
 # Usage:
 ```svelte
@@ -75,7 +88,7 @@ The inputted items will be shown under the input field with a button to remove t
                 bind:value={inputValue}
                 onkeypress={(e) => {
                     if (e.key === "Enter") {
-                        addToSelected(inputValue);
+                        addToSelected(inputValue, e);
                         inputValue = "";
                     }
                 }}
@@ -83,8 +96,8 @@ The inputted items will be shown under the input field with a button to remove t
                 placeholder="Application name"
             />
             <button
-                onclick={() => {
-                    addToSelected(inputValue);
+                onclick={(e) => {
+                    addToSelected(inputValue, e);
                     inputValue = "";
                 }}
                 class="btn btn-neutral join-item border-l-0 no-animation border hover:border hover:border-l-0 hover:border-primary border-primary"
@@ -99,7 +112,8 @@ The inputted items will be shown under the input field with a button to remove t
             >
                 {#each examples.filter((v) => !selected.includes(v)) as app, i}
                     <li>
-                        <button onclick={() => addToSelected(app)}>{app}</button
+                        <button onclick={(e) => addToSelected(app, e)}
+                            >{app}</button
                         >
                     </li>
                 {/each}
@@ -113,7 +127,7 @@ The inputted items will be shown under the input field with a button to remove t
                 <button
                     aria-label="Remove app"
                     class="btn btn-circle btn-ghost btn-xs"
-                    onclick={() => removeFromSelected(value)}
+                    onclick={(e) => removeFromSelected(value, e)}
                     ><svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
