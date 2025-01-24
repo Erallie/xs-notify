@@ -24,8 +24,15 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 # Config file
-Attach or copy and paste your `config.toml` file here.
-This file can be found in in your files under `%APPDATA%\Gozar Productions LLC\XS Notify\config\config.toml`.
+Attach your `config.json` file here.
+This file can be found in in your `%appdata%` directory under `com.Gozar-Productions.XS-Notify\config.json`.
+You can get to your `%appdata%` directory by pressing `Win + R` and entering in `%appdata%`.
+
+# Latest log file
+Attach your latest `.log` file here.
+This file can be found in your `%localappdata%` directory under `com.Gozar-Productions.XS-Notify\logs`.
+The `.log` file will be named according to the time you launched XS Notify in the format `YYYY-MM-DD at HH.mm.ss`.
+You can get to your `%localappdata%` directory by pressing `Win + R` and entering in `%localappdata%`.
 
 # Specs
 Windows Version: [e.g. Windows 10/Windows 11]
