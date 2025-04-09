@@ -41,7 +41,7 @@
                 y2="97"
             /></svg
         ><a
-            href="https://discord.gg/cCCEk7BX4W"
+            href="https://discord.gozarproductions.com"
             target="_blank"
             aria-label="Discord"
             class="link-hover"
