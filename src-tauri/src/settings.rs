@@ -7,7 +7,6 @@ use std::{
 };
 use tauri::{ipc::InvokeError, Manager, State};
 use tauri_plugin_autostart::ManagerExt;
-use tokio::sync::Notify;
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
