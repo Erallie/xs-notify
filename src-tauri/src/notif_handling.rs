@@ -61,9 +61,9 @@ fn get_app_name(notif: &UserNotification) -> Result<String, XSNotifyError> {
 pub async fn notif_to_message(
     notif: Arc<UserNotification>,
     config: &XSNotifySettings,
+    app_name: String,
     // max_characters: usize,
 ) -> Result<XSOverlayMessage, XSNotifyError> {
-    let app_name = get_app_name(&notif).unwrap();
     // log::info!("App: {}", app_name);
     /* let icon = read_logo(display_info)
     .await
@@ -181,11 +181,17 @@ pub async fn polling_notification_handler(
             }) {
                 log::info!("Handling new notification");
 
-                let app_name = get_app_name(&notif).unwrap();
+                let app_name = match get_app_name(&notif) {
+                    Ok(name) => name, // If successful, use the returned name
+                    Err(_) => {
+                        log::warn!("Could not retrive app name. Defaulting to \"Unknown Source\"");
+                        "Unknown Source".to_string()
+                    }
+                };
                 if (config.app_list.contains(&app_name) && !config.is_whitelist) || (!config.app_list.contains(&app_name) && config.is_whitelist) {
                     log::info!("Skipping notification from {}", app_name);
                 } else {
-                    let msg = notif_to_message(notif.clone(), config).await;
+                    let msg = notif_to_message(notif.clone(), config, app_name).await;
                     match msg {
                         Ok(msg) => tx.send(msg)?,
                         Err(e) => {
@@ -225,11 +231,17 @@ pub async fn listening_notification_handler(
 
             let notif_arc = Arc::new(notif.clone());
 
-            let app_name = get_app_name(&notif_arc).unwrap();
+            let app_name = match get_app_name(&notif) {
+                Ok(name) => name, // If successful, use the returned name
+                Err(_) => {
+                    log::warn!("Could not retrive app name. Defaulting to \"Unknown Source\"");
+                    "Unknown Source".to_string()
+                }
+            };
             if (config.app_list.contains(&app_name) && !config.is_whitelist) || (!config.app_list.contains(&app_name) && config.is_whitelist) {
                 log::info!("Skipping notification from {}", app_name);
             } else {
-                let msg = notif_to_message(notif_arc.clone(), config).await;
+                let msg = notif_to_message(notif_arc.clone(), config, app_name).await;
                 match msg {
                     Ok(msg) => tx.send(msg)?,
                     Err(e) => log::warn!("Failed to convert notification to XSOverlay message: {e}"),
