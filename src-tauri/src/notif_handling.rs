@@ -75,16 +75,18 @@ pub async fn notif_to_message(
     let icon = "default".to_string();
     // let icon = get_icon(&app_name).await;
     let toast_binding = notif.Notification()?.Visual()?.GetBinding(&KnownNotificationBindings::ToastGeneric()?)?;
-    let text_elements = toast_binding.GetTextElements()?;
-    // log::info!("{:?}", toast_binding.Template());
-    // log::info!(
-    //     "{:?}",
+    log::debug!("Successfully retrieved toast_binding");
+    // log::debug!("toast_binding.Template() = {:?}", toast_binding.Template());
+    // log::debug!(
+    //     "toast_binding.Hints() = {:?}",
     //     toast_binding
     //         .Hints()?
     //         .into_iter()
     //         .map(|entry| (entry.Key(), entry.Value()))
     //         .collect::<Vec<_>>()
     // );
+    let text_elements = toast_binding.GetTextElements()?;
+    log::debug!("Successfully retrieved text_elements");
     let title = text_elements.GetAt(0)?.Text()?.to_string();
     let mut content: String = text_elements
         .into_iter()
@@ -191,6 +193,7 @@ pub async fn polling_notification_handler(
                 if (config.app_list.contains(&app_name) && !config.is_whitelist) || (!config.app_list.contains(&app_name) && config.is_whitelist) {
                     log::info!("Skipping notification from {}", app_name);
                 } else {
+                    log::debug!("Calling notif_to_message()");
                     let msg = notif_to_message(notif.clone(), config, app_name).await;
                     match msg {
                         Ok(msg) => tx.send(msg)?,

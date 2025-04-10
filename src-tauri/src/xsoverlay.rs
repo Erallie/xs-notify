@@ -42,6 +42,7 @@ pub async fn xs_notify(rx: &mut mpsc::UnboundedReceiver<XSOverlayMessage>, host:
     while let Some(msg) = rx.recv().await {
         log::info!("Sending notification from {}", msg.sourceApp);
         let data = serde_json::to_string(&msg)?;
+        log::debug!("data = {}", data);
         socket.send(data.as_bytes()).await?;
     }
     Ok(())
