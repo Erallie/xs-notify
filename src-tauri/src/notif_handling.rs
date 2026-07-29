@@ -9,10 +9,7 @@ use unicode_segmentation::UnicodeSegmentation;
 use windows::{
     ApplicationModel::AppDisplayInfo,
     Foundation::{Size, TypedEventHandler},
-    Storage::Streams::{
-        DataReader,
-        IRandomAccessStreamWithContentType,
-    },
+    Storage::Streams::DataReader,
     UI::Notifications::{
         KnownNotificationBindings,
         Management::{
@@ -53,16 +50,52 @@ async fn read_logo(
 fn read_logo_blocking(
     display_info: AppDisplayInfo,
 ) -> Result<Vec<u8>, XSNotifyError> {
-    let logo_reference = display_info.GetLogo(Size {
-        Width: 256.0,
-        Height: 256.0,
-    })
-    .map_err(|error| {
-        XSNotifyError::Custom(format!(
-            "GetLogo failed: {}",
-            error
-        ))
-    })?;
+    let requested_size = Size {
+    Width: 256.0,
+    Height: 256.0,
+};
+    let display_name = display_info
+        .DisplayName()
+        .map(|value| value.to_string())
+        .unwrap_or_else(|error| {
+            format!("<DisplayName failed: {:?}>", error)
+        });
+
+    let description = display_info
+        .Description()
+        .map(|value| value.to_string())
+        .unwrap_or_else(|error| {
+            format!("<Description failed: {:?}>", error)
+        });
+
+    log::info!(
+        "Attempting application logo retrieval: display_name={:?}, description={:?}",
+        display_name,
+        description
+    );
+
+    let logo_reference = display_info
+        .GetLogo(requested_size)
+        .map_err(|error| {
+            XSNotifyError::Custom(format!(
+                concat!(
+                    "GetLogo failed. ",
+                    "Display error: {}; ",
+                    "Debug error: {:?}; ",
+                    "HRESULT: 0x{:08X}; ",
+                    "HRESULT decimal: {}; ",
+                    "Windows message: {}; ",
+                    "requested size: {}x{}"
+                ),
+                error,
+                error,
+                error.code().0 as u32,
+                error.code().0,
+                error.message(),
+                requested_size.Width,
+                requested_size.Height
+            ))
+        })?;
 
     let open_operation = logo_reference
         .OpenReadAsync()
@@ -160,6 +193,48 @@ fn get_app_name(notif: &UserNotification) -> Result<String, XSNotifyError> {
     Ok(app_name)
 }
 
+fn log_app_identity(notif: &UserNotification) {
+    let app_info = match notif.AppInfo() {
+        Ok(app_info) => app_info,
+
+        Err(error) => {
+            log::warn!(
+                "Could not retrieve AppInfo: {:?}",
+                error
+            );
+            return;
+        }
+    };
+
+    let app_user_model_id = app_info
+        .AppUserModelId()
+        .map(|value| value.to_string())
+        .unwrap_or_else(|error| {
+            format!("<failed: {:?}>", error)
+        });
+
+    let app_id = app_info
+        .Id()
+        .map(|value| value.to_string())
+        .unwrap_or_else(|error| {
+            format!("<failed: {:?}>", error)
+        });
+
+    let package_family_name = app_info
+        .PackageFamilyName()
+        .map(|value| value.to_string())
+        .unwrap_or_else(|error| {
+            format!("<failed: {:?}>", error)
+        });
+
+    log::info!(
+        "Application identity: AUMID={:?}, app_id={:?}, package_family={:?}",
+        app_user_model_id,
+        app_id,
+        package_family_name
+    );
+}
+
 pub async fn notif_to_message(
     notif: Arc<UserNotification>,
     config: &XSNotifySettings,
@@ -174,6 +249,7 @@ pub async fn notif_to_message(
         log::info!("{:?}", err.context("failed to read logo"));
         "default".to_string()
     }); */
+    log_app_identity(&notif);
     let icon = match notif
         .AppInfo()
         .and_then(|app_info| app_info.DisplayInfo())
