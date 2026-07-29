@@ -478,48 +478,6 @@ fn get_app_user_model_id(
     Ok(app_user_model_id)
 }
 
-fn log_app_identity(notif: &UserNotification) {
-    let app_info = match notif.AppInfo() {
-        Ok(app_info) => app_info,
-
-        Err(error) => {
-            log::warn!(
-                "Could not retrieve AppInfo: {:?}",
-                error
-            );
-            return;
-        }
-    };
-
-    let app_user_model_id = app_info
-        .AppUserModelId()
-        .map(|value| value.to_string())
-        .unwrap_or_else(|error| {
-            format!("<failed: {:?}>", error)
-        });
-
-    let app_id = app_info
-        .Id()
-        .map(|value| value.to_string())
-        .unwrap_or_else(|error| {
-            format!("<failed: {:?}>", error)
-        });
-
-    let package_family_name = app_info
-        .PackageFamilyName()
-        .map(|value| value.to_string())
-        .unwrap_or_else(|error| {
-            format!("<failed: {:?}>", error)
-        });
-
-    log::info!(
-        "Application identity: AUMID={:?}, app_id={:?}, package_family={:?}",
-        app_user_model_id,
-        app_id,
-        package_family_name
-    );
-}
-
 pub async fn notif_to_message(
     notif: Arc<UserNotification>,
     config: &XSNotifySettings,
@@ -534,7 +492,6 @@ pub async fn notif_to_message(
         log::info!("{:?}", err.context("failed to read logo"));
         "default".to_string()
     }); */
-    log_app_identity(&notif);
 
     let app_user_model_id =
         get_app_user_model_id(&notif).ok();
