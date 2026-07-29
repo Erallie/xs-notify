@@ -7,14 +7,27 @@ use tokio::{
 };
 use unicode_segmentation::UnicodeSegmentation;
 use windows::{
-    // ApplicationModel::AppDisplayInfo,
-    Foundation::TypedEventHandler, /* } */
-    /*Storage::Streams::{DataReader, IRandomAccessStreamWithContentType} */
+    ApplicationModel::AppDisplayInfo,
+    Foundation::{Size, TypedEventHandler},
+    Storage::Streams::{
+        DataReader,
+        IRandomAccessStreamWithContentType,
+    },
     UI::Notifications::{
         KnownNotificationBindings,
-        Management::{UserNotificationListener, UserNotificationListenerAccessStatus},
-        NotificationKinds, UserNotification, UserNotificationChangedEventArgs, UserNotificationChangedKind,
+        Management::{
+            UserNotificationListener,
+            UserNotificationListenerAccessStatus,
+        },
+        NotificationKinds,
+        UserNotification,
+        UserNotificationChangedEventArgs,
+        UserNotificationChangedKind,
     },
+};
+use base64::{
+    engine::general_purpose::STANDARD,
+    Engine as _,
 };
 
 // use crate::config::{NotificationStrategy, NotifierConfig};
@@ -22,21 +35,20 @@ use crate::error::XSNotifyError;
 use crate::xsoverlay::XSOverlayMessage;
 use crate::XSNotifySettings;
 
-/* async fn read_logo(display_info: AppDisplayInfo) -> anyhow::Result<Vec<u8>> {
-    let logo_stream = display_info
-        .GetLogo(Size {
-            Width: 0.,
-            Height: 0.,
-        })
-        .context("failed to get logo with size")?
-        .OpenReadAsync()
-        .context("failed to open for reading")?
-        .await
-        .context("awaiting opening for reading failed")?;
-    read_stream_to_bytes(logo_stream)
-        .await
-        .context("failed to read stream to bytes")
-} */
+async fn read_logo(
+    display_info: AppDisplayInfo,
+) -> Result<Vec<u8>, XSNotifyError> {
+    let logo_reference = display_info.GetLogo(Size {
+        Width: 64.0,
+        Height: 64.0,
+    })?;
+
+    let logo_stream = logo_reference
+        .OpenReadAsync()?
+        .await?;
+
+    read_stream_to_bytes(logo_stream).await
+}
 
 /* pub async fn get_icon(app_name: &str) -> String {
     let relative_directory = "logos";
@@ -72,7 +84,43 @@ pub async fn notif_to_message(
         log::info!("{:?}", err.context("failed to read logo"));
         "default".to_string()
     }); */
-    let icon = "default".to_string();
+    let icon = match notif
+        .AppInfo()
+        .and_then(|app_info| app_info.DisplayInfo())
+    {
+        Ok(display_info) => {
+            match read_logo(display_info).await {
+                Ok(icon_bytes) => {
+                    log::debug!(
+                        "Successfully retrieved application icon for {}",
+                        app_name
+                    );
+
+                    STANDARD.encode(icon_bytes)
+                }
+
+                Err(error) => {
+                    log::warn!(
+                        "Could not retrieve application icon for {}: {}",
+                        app_name,
+                        error
+                    );
+
+                    "default".to_string()
+                }
+            }
+        }
+
+        Err(error) => {
+            log::warn!(
+                "Could not retrieve application display information for {}: {}",
+                app_name,
+                error
+            );
+
+            "default".to_string()
+        }
+    };
     // let icon = get_icon(&app_name).await;
     let toast_binding = notif.Notification()?.Visual()?.GetBinding(&KnownNotificationBindings::ToastGeneric()?)?;
     log::debug!("Successfully retrieved toast_binding");
@@ -143,6 +191,8 @@ pub async fn notif_to_message(
         let first_timeout = words / config.reading_speed * 60 as f32;
         timeout = f32::min(f32::max(first_timeout, config.min_timeout), config.max_timeout);
     }
+    
+    let use_base64_icon = icon != "default";
 
     Ok(XSOverlayMessage {
         messageType: 1,
@@ -154,7 +204,7 @@ pub async fn notif_to_message(
         audioPath: "default".to_string(),
         title,
         content,
-        useBase64Icon: false,
+        useBase64Icon: use_base64_icon,
         icon,
         sourceApp: app_name,
     })
@@ -274,15 +324,22 @@ pub async fn notification_listener(config: &XSNotifySettings, tx: &UnboundedSend
     polling_notification_handler(listener, tx, config).await
 }
 
-/* async fn read_stream_to_bytes(
+async fn read_stream_to_bytes(
     stream: IRandomAccessStreamWithContentType,
-) -> anyhow::Result<Vec<u8>> {
-    let stream_len = stream.Size()? as usize;
-    let mut data = vec![0u8; stream_len];
+) -> Result<Vec<u8>, XSNotifyError> {
+    let stream_length = stream.Size()? as usize;
+    let mut data = vec![0_u8; stream_length];
+
     let reader = DataReader::CreateDataReader(&stream)?;
-    reader.LoadAsync(stream_len as u32)?.await?;
+
+    reader
+        .LoadAsync(stream_length as u32)?
+        .await?;
+
     reader.ReadBytes(&mut data)?;
-    reader.Close().ok();
-    stream.Close().ok();
+
+    let _ = reader.Close();
+    let _ = stream.Close();
+
     Ok(data)
-} */
+}

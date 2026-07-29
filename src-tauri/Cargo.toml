@@ -12,6 +12,7 @@ edition = "2021"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+base64 = "0.22"
 bytes = "1.9"
 chrono = "0.4"
 log = "0.4"
@@ -37,4 +38,8 @@ windows = { version = "0.43.0", features = [
   "ApplicationModel",
   "Storage_Streams",
   "Graphics_Imaging",
+  "Foundation",
+  "Storage_Streams",
+  "UI_Notifications",
+  "UI_Notifications_Management"
 ] }
