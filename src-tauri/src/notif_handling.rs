@@ -1,12 +1,22 @@
-use std::sync::Arc;
-use std::time::Duration;
-
+use std::{
+    ffi::c_void,
+    io::Cursor,
+    mem::size_of,
+    sync::Arc,
+    time::Duration,
+};
+use image::{
+    codecs::png::PngEncoder,
+    ColorType,
+    ImageEncoder,
+};
 use tokio::{
     sync::mpsc::{unbounded_channel, UnboundedSender},
     time::sleep,
 };
 use unicode_segmentation::UnicodeSegmentation;
 use windows::{
+    core::HSTRING,
     ApplicationModel::AppDisplayInfo,
     Foundation::{Size, TypedEventHandler},
     Storage::Streams::DataReader,
@@ -20,6 +30,31 @@ use windows::{
         UserNotification,
         UserNotificationChangedEventArgs,
         UserNotificationChangedKind,
+    },
+    Win32::{
+        Foundation::SIZE,
+        Graphics::Gdi::{
+            DeleteObject,
+            GetDC,
+            GetDIBits,
+            GetObjectW,
+            ReleaseDC,
+            BITMAP,
+            BITMAPINFO,
+            BITMAPINFOHEADER,
+            BI_RGB,
+            DIB_RGB_COLORS,
+        },
+        System::Com::{
+            CoInitializeEx,
+            CoUninitialize,
+            COINIT_APARTMENTTHREADED,
+        },
+        UI::Shell::{
+            SHCreateItemFromParsingName,
+            IShellItemImageFactory,
+            SIIGBF_ICONONLY,
+        },
     },
 };
 use base64::{
@@ -107,7 +142,7 @@ fn read_logo_blocking(
         })?;
 
     let logo_stream = open_operation
-        .get()
+        .join()
         .map_err(|error| {
             XSNotifyError::Custom(format!(
                 "OpenReadAsync failed while waiting: {}",
@@ -148,7 +183,7 @@ fn read_logo_blocking(
         })?;
 
     load_operation
-        .get()
+        .join()
         .map_err(|error| {
             XSNotifyError::Custom(format!(
                 "LoadAsync failed while waiting: {}",
@@ -173,6 +208,225 @@ fn read_logo_blocking(
     Ok(data)
 }
 
+async fn read_shell_icon(
+    app_user_model_id: String,
+) -> Result<Vec<u8>, XSNotifyError> {
+    tokio::task::spawn_blocking(move || {
+        read_shell_icon_blocking(&app_user_model_id)
+    })
+    .await
+    .map_err(|error| {
+        XSNotifyError::Custom(format!(
+            "Shell icon task failed: {}",
+            error
+        ))
+    })?
+}
+
+fn read_shell_icon_blocking(
+    app_user_model_id: &str,
+) -> Result<Vec<u8>, XSNotifyError> {
+    unsafe {
+        let result = CoInitializeEx(
+            None,
+            COINIT_APARTMENTTHREADED,
+        );
+
+        let should_uninitialize = result.is_ok();
+
+        const RPC_E_CHANGED_MODE: i32 =
+            0x80010106_u32 as i32;
+
+        if result.is_err() && result.0 != RPC_E_CHANGED_MODE {
+            return Err(XSNotifyError::Custom(format!(
+                "Could not initialize COM: HRESULT 0x{:08X}",
+                result.0 as u32
+            )));
+        }
+
+        let icon_result =
+            extract_shell_icon(app_user_model_id);
+
+        if should_uninitialize {
+            CoUninitialize();
+        }
+
+        icon_result
+    }
+}
+
+unsafe fn extract_shell_icon(
+    app_user_model_id: &str,
+) -> Result<Vec<u8>, XSNotifyError> {
+    let parsing_name = format!(
+        "shell:AppsFolder\\{}",
+        app_user_model_id
+    );
+
+    log::debug!(
+        "Retrieving Shell icon from {:?}",
+        parsing_name
+    );
+
+    let parsing_name = HSTRING::from(parsing_name);
+
+    let image_factory: IShellItemImageFactory =
+        SHCreateItemFromParsingName(
+            &parsing_name,
+            None,
+        )
+        .map_err(|error| {
+            XSNotifyError::Custom(format!(
+                "Could not resolve AppsFolder item for {:?}: {}",
+                app_user_model_id,
+                error
+            ))
+        })?;
+
+    let bitmap = image_factory
+        .GetImage(
+            SIZE {
+                cx: 256,
+                cy: 256,
+            },
+            SIIGBF_ICONONLY,
+        )
+        .map_err(|error| {
+            XSNotifyError::Custom(format!(
+                "Shell GetImage failed for {:?}: {}",
+                app_user_model_id,
+                error
+            ))
+        })?;
+
+    let result = hbitmap_to_png(bitmap);
+
+    let _ = DeleteObject(bitmap.into());
+
+    result
+}
+
+unsafe fn hbitmap_to_png(
+    bitmap_handle: windows::Win32::Graphics::Gdi::HBITMAP,
+) -> Result<Vec<u8>, XSNotifyError> {
+    let mut bitmap = BITMAP::default();
+
+    let object_result = GetObjectW(
+        bitmap_handle.into(),
+        size_of::<BITMAP>() as i32,
+        Some(
+            &mut bitmap as *mut BITMAP
+                as *mut c_void
+        ),
+    );
+
+    if object_result == 0 {
+        return Err(XSNotifyError::Custom(
+            "GetObjectW could not read the Shell bitmap"
+                .to_string(),
+        ));
+    }
+
+    let width = bitmap.bmWidth;
+    let height = bitmap.bmHeight.abs();
+
+    if width <= 0 || height <= 0 {
+        return Err(XSNotifyError::Custom(format!(
+            "Shell returned an invalid bitmap size: {}x{}",
+            width,
+            height
+        )));
+    }
+
+    let width_u32 = width as u32;
+    let height_u32 = height as u32;
+
+    let mut bitmap_info = BITMAPINFO::default();
+
+    bitmap_info.bmiHeader = BITMAPINFOHEADER {
+        biSize: size_of::<BITMAPINFOHEADER>() as u32,
+        biWidth: width,
+        // A negative height requests top-down pixel ordering.
+        biHeight: -height,
+        biPlanes: 1,
+        biBitCount: 32,
+        biCompression: BI_RGB.0 as u32,
+        biSizeImage: width_u32
+            .saturating_mul(height_u32)
+            .saturating_mul(4),
+        ..Default::default()
+    };
+
+    let byte_count = width_u32
+        .checked_mul(height_u32)
+        .and_then(|value| value.checked_mul(4))
+        .ok_or_else(|| {
+            XSNotifyError::Custom(
+                "Shell bitmap dimensions were too large"
+                    .to_string(),
+            )
+        })? as usize;
+
+    let mut bgra_pixels = vec![0_u8; byte_count];
+
+    let screen_dc = GetDC(None);
+
+    if screen_dc.0.is_null() {
+        return Err(XSNotifyError::Custom(
+            "GetDC failed while reading the Shell bitmap"
+                .to_string(),
+        ));
+    }
+
+    let scan_lines = GetDIBits(
+        screen_dc,
+        bitmap_handle,
+        0,
+        height_u32,
+        Some(bgra_pixels.as_mut_ptr() as *mut c_void),
+        &mut bitmap_info,
+        DIB_RGB_COLORS,
+    );
+
+    ReleaseDC(None, screen_dc);
+
+    if scan_lines == 0 {
+        return Err(XSNotifyError::Custom(
+            "GetDIBits failed while reading the Shell bitmap"
+                .to_string(),
+        ));
+    }
+
+    // GetDIBits returns BGRA. The image encoder expects RGBA.
+    for pixel in bgra_pixels.chunks_exact_mut(4) {
+        pixel.swap(0, 2);
+    }
+
+    let mut png_bytes = Vec::new();
+
+    {
+        let encoder = PngEncoder::new(
+            Cursor::new(&mut png_bytes)
+        );
+
+        encoder
+            .write_image(
+                &bgra_pixels,
+                width_u32,
+                height_u32,
+                ColorType::Rgba8.into(),
+            )
+            .map_err(|error| {
+                XSNotifyError::Custom(format!(
+                    "Could not encode Shell icon as PNG: {}",
+                    error
+                ))
+            })?;
+    }
+
+    Ok(png_bytes)
+}
+
 /* pub async fn get_icon(app_name: &str) -> String {
     let relative_directory = "logos";
     let mut path = PathBuf::from(relative_directory);
@@ -191,6 +445,37 @@ fn get_app_name(notif: &UserNotification) -> Result<String, XSNotifyError> {
     let display_info = app_info.DisplayInfo()?;
     let app_name = display_info.DisplayName()?.to_string();
     Ok(app_name)
+}
+
+fn get_app_user_model_id(
+    notif: &UserNotification,
+) -> Result<String, XSNotifyError> {
+    let app_info = notif
+        .AppInfo()
+        .map_err(|error| {
+            XSNotifyError::Custom(format!(
+                "Could not retrieve AppInfo: {}",
+                error
+            ))
+        })?;
+
+    let app_user_model_id = app_info
+        .AppUserModelId()
+        .map_err(|error| {
+            XSNotifyError::Custom(format!(
+                "Could not retrieve AppUserModelId: {}",
+                error
+            ))
+        })?
+        .to_string();
+
+    if app_user_model_id.trim().is_empty() {
+        return Err(XSNotifyError::Custom(
+            "Application has an empty AppUserModelId".to_string(),
+        ));
+    }
+
+    Ok(app_user_model_id)
 }
 
 fn log_app_identity(notif: &UserNotification) {
@@ -250,24 +535,86 @@ pub async fn notif_to_message(
         "default".to_string()
     }); */
     log_app_identity(&notif);
-    let icon = match notif
-        .AppInfo()
-        .and_then(|app_info| app_info.DisplayInfo())
-    {
-        Ok(display_info) => {
-            match read_logo(display_info).await {
+
+    let app_user_model_id =
+        get_app_user_model_id(&notif).ok();
+
+    let shell_icon = match app_user_model_id {
+        Some(app_user_model_id) => {
+            match read_shell_icon(
+                app_user_model_id.clone()
+            )
+            .await
+            {
                 Ok(icon_bytes) => {
                     log::debug!(
-                        "Successfully retrieved application icon for {}",
-                        app_name
+                        "Successfully retrieved Shell icon for {} using AUMID {:?}",
+                        app_name,
+                        app_user_model_id
                     );
 
-                    STANDARD.encode(icon_bytes)
+                    Some(STANDARD.encode(icon_bytes))
                 }
 
                 Err(error) => {
                     log::warn!(
-                        "Could not retrieve application icon for {}: {}",
+                        "Could not retrieve Shell icon for {} using AUMID {:?}: {}",
+                        app_name,
+                        app_user_model_id,
+                        error
+                    );
+
+                    None
+                }
+            }
+        }
+
+        None => {
+            log::warn!(
+                "{} did not provide a usable AppUserModelId",
+                app_name
+            );
+
+            None
+        }
+    };
+
+    let icon = match shell_icon {
+        Some(icon) => icon,
+
+        None => {
+            match notif
+                .AppInfo()
+                .and_then(|app_info| {
+                    app_info.DisplayInfo()
+                })
+            {
+                Ok(display_info) => {
+                    match read_logo(display_info).await {
+                        Ok(icon_bytes) => {
+                            log::debug!(
+                                "Successfully retrieved AppDisplayInfo icon for {}",
+                                app_name
+                            );
+
+                            STANDARD.encode(icon_bytes)
+                        }
+
+                        Err(error) => {
+                            log::warn!(
+                                "Could not retrieve any application icon for {}: {}",
+                                app_name,
+                                error
+                            );
+
+                            "default".to_string()
+                        }
+                    }
+                }
+
+                Err(error) => {
+                    log::warn!(
+                        "Could not retrieve display information for {}: {}",
                         app_name,
                         error
                     );
@@ -275,16 +622,6 @@ pub async fn notif_to_message(
                     "default".to_string()
                 }
             }
-        }
-
-        Err(error) => {
-            log::warn!(
-                "Could not retrieve application display information for {}: {}",
-                app_name,
-                error
-            );
-
-            "default".to_string()
         }
     };
     // let icon = get_icon(&app_name).await;
@@ -432,18 +769,43 @@ pub async fn listening_notification_handler(
     // max_characters: usize,
 ) -> Result<(), XSNotifyError> {
     let (new_notif_tx, mut new_notif_rx) = unbounded_channel::<u32>();
-    listener.NotificationChanged(&TypedEventHandler::new(move |_sender, args: &Option<UserNotificationChangedEventArgs>| {
-        if let Some(event) = args {
-            if event.ChangeKind()? == UserNotificationChangedKind::Added {
-                log::info!("Handling new notification event");
-                let id = event.UserNotificationId()?;
-                if let Err(e) = new_notif_tx.send(id) {
-                    log::error!("Error sending ID of new notification: {e}");
+    listener.NotificationChanged(
+        &TypedEventHandler::new(
+            move |
+                _sender,
+                event: windows::core::Ref<
+                    '_,
+                    UserNotificationChangedEventArgs,
+                >,
+            | {
+                let Some(event) = event.as_ref() else {
+                    return Ok(());
+                };
+
+                if event.ChangeKind()?
+                    == UserNotificationChangedKind::Added
+                {
+                    log::info!(
+                        "Handling new notification event"
+                    );
+
+                    let id =
+                        event.UserNotificationId()?;
+
+                    if let Err(error) =
+                        new_notif_tx.send(id)
+                    {
+                        log::error!(
+                            "Error sending ID of new notification: {}",
+                            error
+                        );
+                    }
                 }
-            };
-        }
-        Ok(())
-    }))?;
+
+                Ok(())
+            },
+        ),
+    )?;
     while let Some(notif_id) = new_notif_rx.recv().await {
         if let Err(e) = async {
             let notif = listener.GetNotification(notif_id)?;
