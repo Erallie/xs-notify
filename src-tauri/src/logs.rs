@@ -1,4 +1,4 @@
-use crate::{error::XSNotifyError, XSNotify};
+use crate::{error::XSNotifyError};
 use chrono::{
     prelude::{DateTime, Local},
     NaiveDateTime, TimeZone,
@@ -7,11 +7,9 @@ use regex::Regex;
 use serde::Serialize;
 use std::{
     fs,
-    io::{self, Read},
-    path::{self, Path, PathBuf},
-    sync::{Arc, Mutex},
+    path::PathBuf,
 };
-use tauri::{Manager, State};
+use tauri::Manager;
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]

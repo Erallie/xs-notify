@@ -35,7 +35,7 @@ use crate::error::XSNotifyError;
 use crate::xsoverlay::XSOverlayMessage;
 use crate::XSNotifySettings;
 
-async fn read_logo(
+fn read_logo(
     display_info: AppDisplayInfo,
 ) -> Result<Vec<u8>, XSNotifyError> {
     let logo_reference = display_info.GetLogo(Size {
@@ -45,9 +45,9 @@ async fn read_logo(
 
     let logo_stream = logo_reference
         .OpenReadAsync()?
-        .await?;
+        .get()?;
 
-    read_stream_to_bytes(logo_stream).await
+    read_stream_to_bytes(logo_stream)
 }
 
 /* pub async fn get_icon(app_name: &str) -> String {
@@ -89,7 +89,7 @@ pub async fn notif_to_message(
         .and_then(|app_info| app_info.DisplayInfo())
     {
         Ok(display_info) => {
-            match read_logo(display_info).await {
+            match read_logo(display_info) {
                 Ok(icon_bytes) => {
                     log::debug!(
                         "Successfully retrieved application icon for {}",
@@ -324,7 +324,7 @@ pub async fn notification_listener(config: &XSNotifySettings, tx: &UnboundedSend
     polling_notification_handler(listener, tx, config).await
 }
 
-async fn read_stream_to_bytes(
+fn read_stream_to_bytes(
     stream: IRandomAccessStreamWithContentType,
 ) -> Result<Vec<u8>, XSNotifyError> {
     let stream_length = stream.Size()? as usize;
@@ -334,7 +334,7 @@ async fn read_stream_to_bytes(
 
     reader
         .LoadAsync(stream_length as u32)?
-        .await?;
+        .get()?;
 
     reader.ReadBytes(&mut data)?;
 
