@@ -35,19 +35,109 @@ use crate::error::XSNotifyError;
 use crate::xsoverlay::XSOverlayMessage;
 use crate::XSNotifySettings;
 
-fn read_logo(
+async fn read_logo(
+    display_info: AppDisplayInfo,
+) -> Result<Vec<u8>, XSNotifyError> {
+    tokio::task::spawn_blocking(move || {
+        read_logo_blocking(display_info)
+    })
+    .await
+    .map_err(|error| {
+        XSNotifyError::Custom(format!(
+            "Application icon task failed: {}",
+            error
+        ))
+    })?
+}
+
+fn read_logo_blocking(
     display_info: AppDisplayInfo,
 ) -> Result<Vec<u8>, XSNotifyError> {
     let logo_reference = display_info.GetLogo(Size {
-        Width: 64.0,
-        Height: 64.0,
+        Width: 256.0,
+        Height: 256.0,
+    })
+    .map_err(|error| {
+        XSNotifyError::Custom(format!(
+            "GetLogo failed: {}",
+            error
+        ))
     })?;
 
-    let logo_stream = logo_reference
-        .OpenReadAsync()?
-        .get()?;
+    let open_operation = logo_reference
+        .OpenReadAsync()
+        .map_err(|error| {
+            XSNotifyError::Custom(format!(
+                "OpenReadAsync failed to start: {}",
+                error
+            ))
+        })?;
 
-    read_stream_to_bytes(logo_stream)
+    let logo_stream = open_operation
+        .get()
+        .map_err(|error| {
+            XSNotifyError::Custom(format!(
+                "OpenReadAsync failed while waiting: {}",
+                error
+            ))
+        })?;
+
+    let stream_length = logo_stream
+        .Size()
+        .map_err(|error| {
+            XSNotifyError::Custom(format!(
+                "Could not determine icon stream size: {}",
+                error
+            ))
+        })? as usize;
+
+    if stream_length == 0 {
+        return Err(XSNotifyError::Custom(
+            "Application icon stream was empty".to_string(),
+        ));
+    }
+
+    let reader = DataReader::CreateDataReader(&logo_stream)
+        .map_err(|error| {
+            XSNotifyError::Custom(format!(
+                "Could not create icon data reader: {}",
+                error
+            ))
+        })?;
+
+    let load_operation = reader
+        .LoadAsync(stream_length as u32)
+        .map_err(|error| {
+            XSNotifyError::Custom(format!(
+                "LoadAsync failed to start: {}",
+                error
+            ))
+        })?;
+
+    load_operation
+        .get()
+        .map_err(|error| {
+            XSNotifyError::Custom(format!(
+                "LoadAsync failed while waiting: {}",
+                error
+            ))
+        })?;
+
+    let mut data = vec![0_u8; stream_length];
+
+    reader
+        .ReadBytes(&mut data)
+        .map_err(|error| {
+            XSNotifyError::Custom(format!(
+                "Could not read icon bytes: {}",
+                error
+            ))
+        })?;
+
+    let _ = reader.Close();
+    let _ = logo_stream.Close();
+
+    Ok(data)
 }
 
 /* pub async fn get_icon(app_name: &str) -> String {
@@ -89,7 +179,7 @@ pub async fn notif_to_message(
         .and_then(|app_info| app_info.DisplayInfo())
     {
         Ok(display_info) => {
-            match read_logo(display_info) {
+            match read_logo(display_info).await {
                 Ok(icon_bytes) => {
                     log::debug!(
                         "Successfully retrieved application icon for {}",
@@ -322,24 +412,4 @@ pub async fn notification_listener(config: &XSNotifySettings, tx: &UnboundedSend
     }
     log::info!("Notification access granted"); //info
     polling_notification_handler(listener, tx, config).await
-}
-
-fn read_stream_to_bytes(
-    stream: IRandomAccessStreamWithContentType,
-) -> Result<Vec<u8>, XSNotifyError> {
-    let stream_length = stream.Size()? as usize;
-    let mut data = vec![0_u8; stream_length];
-
-    let reader = DataReader::CreateDataReader(&stream)?;
-
-    reader
-        .LoadAsync(stream_length as u32)?
-        .get()?;
-
-    reader.ReadBytes(&mut data)?;
-
-    let _ = reader.Close();
-    let _ = stream.Close();
-
-    Ok(data)
 }
