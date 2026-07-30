@@ -22,9 +22,9 @@ This is a desktop application that runs alongside [XSOverlay](https://store.stea
 - A nice **interface** for the settings with a tab for the console.
 - Options to **launch on system startup** and **minimize to the system tray**.
 # Installation
-1. Head over to the [Releases](https://github.com/Erallie/xs-notify/releases) page and find the latest release.
-2. Under **Assets**, download `xs-notify.exe`
-3. Run `xs-notify.exe`.
+1. Head over to the [Releases](https://github.com/Erallie/xs-notify/releases) page and find the [latest release](https://github.com/Erallie/xs-notify/releases/latest).
+2. Under **Assets**, download the .exe file ending in `-setup.exe`
+3. Run the installer.
 4. Start the notification bridge when you want your notifications pushed to XSOverlay.
 # Auto-launch XS Notify
 XS Notify has a setting you can enable to have it launch automatically when you start your computer.
