@@ -39,7 +39,7 @@ pub async fn fetch_latest<T: Into<String>>(current_version: T, app_name: T) -> R
 
     let username = "Erallie";
     let repository = "xs-notify";
-    let installer_filename = "xs-notify-setup.exe";
+    let exe_filename = app_name + ".exe";
 
     // Fetch the latest release from GitHub
     let url = format!("https://api.github.com/repos/{}/{}/releases/latest", username, repository);
@@ -54,13 +54,7 @@ pub async fn fetch_latest<T: Into<String>>(current_version: T, app_name: T) -> R
                 let current_formatted = format!("v{}", current);
                 let latest_formatted = format!("v{}", latest);
                 let download_link = format!("https://github.com/{}/{}/releases/tag/v{}", username, repository, latest);
-                let exe_link = format!(
-                    "https://github.com/{}/{}/releases/download/v{}/{}",
-                    username,
-                    repository,
-                    latest,
-                    installer_filename
-                );
+                let exe_link = format!("https://github.com/{}/{}/releases/download/v{}/{}", username, repository, latest, exe_filename);
                 log::info!(
                     "Current version: {}\n\nA NEW VERSION is available: {}\nCtrl + click the following link to download it: {}\n",
                     current_formatted,
@@ -103,79 +97,70 @@ pub fn open_update_link(state: State<Arc<Mutex<XSNotify>>>, app: tauri::AppHandl
 }
 
 #[tauri::command]
-pub async fn download_update(
-    state: State<'_, Arc<Mutex<XSNotify>>>,
-    app: tauri::AppHandle,
-) -> Result<(), XSNotifyError> {
+pub async fn download_update(state: State<'_, Arc<Mutex<XSNotify>>>, app: tauri::AppHandle) -> Result<(), XSNotifyError> {
     let latest_result = state.lock().unwrap().latest_result.clone();
+    // Start the download in a separate task
 
-    let installer_path = app
-        .path()
-        .temp_dir()?
-        .join("xs-notify-setup.exe");
+    let app_name = app.package_info().crate_name;
+    // let temp_file_name = app_name.to_owned() + ".temp";
+    let temp_file_name = app.path().temp_dir()?.join(format!("{}.temp", app_name));
 
-    match download(latest_result.clone(), installer_path.clone()).await {
+    match download(latest_result.clone(), temp_file_name.clone()).await {
         Ok(_) => {
-            let script_path = app
-                .path()
-                .temp_dir()?
-                .join("xs-notify-update.ps1");
-
+            // let exe_name = app_name.to_owned() + ".exe";
+            let exe_name = std::env::current_exe()?;
+            // let exe_name = app.path().dir
+            // Hardcoded PowerShell script
             let script_content = r#"
 param(
-    [string]$InstallerPath
+    [string]$TempFilePath,
+    [string]$ExePath
 )
 
-Start-Sleep -Seconds 2
+# Get the path of the currently running script
+$currentScriptPath = $MyInvocation.MyCommand.Path
 
-if (-not (Test-Path $InstallerPath)) {
-    exit 1
+Start-Sleep -Seconds 1
+
+# Check if the file exists
+if (Test-Path $TempFilePath) {
+    # Remove the file
+    Copy-Item $TempFilePath $ExePath
+    Remove-Item $TempFilePath -Force
+    Start-Process -FilePath $ExePath
+    # Remove the script file
+    Remove-Item -Path $currentScriptPath -Force
+    exit
+} else {
+    Write-Host "File does not exist."
 }
+                "#;
 
-try {
-    $installerProcess = Start-Process `
-        -FilePath $InstallerPath `
-        -Wait `
-        -PassThru
+            // Create a temporary PowerShell script file
+            let temp_script_path = app.path().temp_dir()?.join(format!("{}-update.ps1", app_name));
+            // let temp_script_path = app_name.to_owned() + "-update.ps1";
+            std::fs::write(temp_script_path.clone(), script_content).expect("Failed to write xs_notify.update_program script file");
 
-    $exitCode = $installerProcess.ExitCode
-
-    Remove-Item $InstallerPath -Force -ErrorAction SilentlyContinue
-    Remove-Item $MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyContinue
-
-    exit $exitCode
-}
-catch {
-    exit 1
-}
-"#;
-
-            std::fs::write(&script_path, script_content)?;
-
-            Command::new("powershell")
-                .arg("-NoProfile")
+            // Execute the PowerShell script
+            let _ = Command::new("powershell")
                 .arg("-ExecutionPolicy")
-                .arg("Bypass")
+                .arg("Bypass") // Bypass execution policy for the script
                 .arg("-File")
-                .arg(&script_path)
-                .arg("-InstallerPath")
-                .arg(&installer_path)
-                .spawn()?;
+                .arg(temp_script_path)
+                .arg("-TempFilePath")
+                .arg(temp_file_name)
+                .arg("-ExePath")
+                .arg(exe_name)
+                .spawn();
 
             app.cleanup_before_exit();
             app.exit(0);
         }
-        Err(error) => {
-            log::error!("Failed to download installer: {error}");
-
-            app.emit_to(
-                "update",
-                "update-failed",
-                latest_result.build_link,
-            )?;
+        Err(e) => {
+            log::error!("Failed to download file: {e}");
+            app.emit_to("update", "update-failed", latest_result.build_link).unwrap();
         }
-    }
-
+    };
     Ok(())
 }
 
