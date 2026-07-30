@@ -13,13 +13,20 @@ use tokio::{
 #[derive(Deserialize)]
 struct Release {
     tag_name: String,
+    assets: Vec<Asset>,
+}
+
+#[derive(Deserialize)]
+struct Asset {
+    name: String,
+    browser_download_url: String,
 }
 
 #[derive(Debug, Clone)]
 pub struct LatestResult {
     pub is_latest: bool,
     pub build_link: String,
-    pub exe_link: String,
+    pub installer_link: String,
 }
 
 impl Default for LatestResult {
@@ -27,7 +34,7 @@ impl Default for LatestResult {
         LatestResult {
             is_latest: true,
             build_link: String::new(),
-            exe_link: String::new(),
+            installer_link: String::new(),
         }
     }
 }
@@ -39,7 +46,6 @@ pub async fn fetch_latest<T: Into<String>>(current_version: T, app_name: T) -> R
 
     let username = "Erallie";
     let repository = "xs-notify";
-    let installer_filename = "xs-notify-setup.exe";
 
     // Fetch the latest release from GitHub
     let url = format!("https://api.github.com/repos/{}/{}/releases/latest", username, repository);
@@ -54,13 +60,17 @@ pub async fn fetch_latest<T: Into<String>>(current_version: T, app_name: T) -> R
                 let current_formatted = format!("v{}", current);
                 let latest_formatted = format!("v{}", latest);
                 let download_link = format!("https://github.com/{}/{}/releases/tag/v{}", username, repository, latest);
-                let exe_link = format!(
-                    "https://github.com/{}/{}/releases/download/v{}/{}",
-                    username,
-                    repository,
-                    latest,
-                    installer_filename
-                );
+                let installer_link = response
+                    .assets
+                    .iter()
+                    .find(|asset| asset.name.ends_with("-setup.exe"))
+                    .map(|asset| asset.browser_download_url.clone())
+                    .ok_or_else(|| {
+                        XSNotifyError::Custom(
+                            "No installer ending in '-setup.exe' was found in the latest release."
+                                .to_string(),
+                        )
+                    })?;
                 log::info!(
                     "Current version: {}\n\nA NEW VERSION is available: {}\nCtrl + click the following link to download it: {}\n",
                     current_formatted,
@@ -70,7 +80,7 @@ pub async fn fetch_latest<T: Into<String>>(current_version: T, app_name: T) -> R
                 return Ok(LatestResult {
                     is_latest: false,
                     build_link: download_link,
-                    exe_link,
+                    installer_link,
                 });
             } else {
                 let this_formatted = format!("v{}", current);
@@ -78,7 +88,7 @@ pub async fn fetch_latest<T: Into<String>>(current_version: T, app_name: T) -> R
                 return Ok(LatestResult {
                     is_latest: true,
                     build_link: String::new(),
-                    exe_link: String::new(),
+                    installer_link: String::new(),
                 });
             }
         } else {
@@ -181,7 +191,7 @@ catch {
 
 async fn download(latest_result: LatestResult, temp_file_name: PathBuf) -> Result<(), XSNotifyError> {
     // Use tokio to download the file
-    let url = latest_result.exe_link;
+    let url = latest_result.installer_link;
     let response = reqwest::get(url).await?.error_for_status()?;
     let bytes = response.bytes().await?;
     let mut file: File = async_fs::File::create(temp_file_name.clone()).await?;
