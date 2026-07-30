@@ -9,6 +9,8 @@ use tokio::{
     fs::{self as async_fs, File},
     io::AsyncWriteExt,
 };
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
 
 #[derive(Deserialize)]
 struct Release {
@@ -169,15 +171,23 @@ catch {
 
             std::fs::write(&script_path, script_content)?;
 
-            Command::new("powershell")
+            let mut powershell = Command::new("powershell");
+
+            powershell
                 .arg("-NoProfile")
                 .arg("-ExecutionPolicy")
                 .arg("Bypass")
+                .arg("-WindowStyle")
+                .arg("Hidden")
                 .arg("-File")
                 .arg(&script_path)
                 .arg("-InstallerPath")
-                .arg(&installer_path)
-                .spawn()?;
+                .arg(&installer_path);
+
+            #[cfg(target_os = "windows")]
+            powershell.creation_flags(0x08000000); // CREATE_NO_WINDOW
+
+            powershell.spawn()?;
 
             app.cleanup_before_exit();
             app.exit(0);
