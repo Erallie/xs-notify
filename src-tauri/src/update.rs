@@ -79,7 +79,7 @@ pub async fn fetch_latest<T: Into<String>>(current_version: T, app_name: T) -> R
                         )
                     });
                 log::info!(
-                    "Current version: {}\n\nA NEW VERSION is available: {}\nCtrl + click the following link to download it: {}\n",
+                    "Current version: {}\n\nA NEW VERSION is available: {}\nDownload it here: {}\n",
                     current_formatted,
                     latest_formatted,
                     download_link

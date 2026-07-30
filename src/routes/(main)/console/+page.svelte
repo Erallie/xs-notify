@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Logs } from "$lib/types/types.js";
     import { attachLogger } from "@tauri-apps/plugin-log";
-    import { getContext } from "svelte";
+    import { openUrl } from "@tauri-apps/plugin-opener";
 
     let { data } = $props();
 
@@ -34,6 +34,22 @@
             }
         };
     });
+
+    function splitMessage(message: string): string[] {
+        return message.split(/(https?:\/\/[^\s]+)/g);
+    }
+
+    function isUrl(value: string): boolean {
+        return /^https?:\/\/[^\s]+$/.test(value);
+    }
+
+    async function openLogLink(url: string) {
+        try {
+            await openUrl(url);
+        } catch (error) {
+            console.error("Failed to open link:", error);
+        }
+    }
 
     function addToConsole(message: string, level: number) {
         let consoleEl = document.getElementById("console-el");
@@ -89,8 +105,25 @@
     <div id="console-el" class="mockup-code overflow-y-auto">
         {#each logElement as log}
             <pre class="text-wrap -indent-12 pl-12 {log.extraClasses}"><code
-                    ><span class={log.infoCls}>{log.info}</span> {log.msg}</code
+                ><span class={log.infoCls}>{log.info}</span> {#each splitMessage(log.msg) as part}{#if isUrl(part)}<button type="button" class="log-link" onclick={() => openLogLink(part)}>{part}</button>{:else}{part}{/if}{/each}</code
                 ></pre>
         {/each}
     </div>
 </section>
+
+<style>
+    .log-link {
+        display: inline;
+        padding: 0;
+        border: none;
+        background: none;
+        color: inherit;
+        font: inherit;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    .log-link:hover {
+        opacity: 0.8;
+    }
+</style>
