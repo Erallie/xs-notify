@@ -9,8 +9,6 @@ use tokio::{
     fs::{self as async_fs, File},
     io::AsyncWriteExt,
 };
-#[cfg(target_os = "windows")]
-use std::os::windows::process::CommandExt;
 
 #[derive(Deserialize)]
 struct Release {
@@ -135,59 +133,7 @@ pub async fn download_update(
 
     match download(latest_result.clone(), installer_path.clone()).await {
         Ok(_) => {
-            let script_path = app
-                .path()
-                .temp_dir()?
-                .join("xs-notify-update.ps1");
-
-            let script_content = r#"
-param(
-    [string]$InstallerPath
-)
-
-Start-Sleep -Seconds 2
-
-if (-not (Test-Path $InstallerPath)) {
-    exit 1
-}
-
-try {
-    $installerProcess = Start-Process `
-        -FilePath $InstallerPath `
-        -Wait `
-        -PassThru
-
-    $exitCode = $installerProcess.ExitCode
-
-    Remove-Item $InstallerPath -Force -ErrorAction SilentlyContinue
-    Remove-Item $MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyContinue
-
-    exit $exitCode
-}
-catch {
-    exit 1
-}
-"#;
-
-            std::fs::write(&script_path, script_content)?;
-
-            let mut powershell = Command::new("powershell");
-
-            powershell
-                .arg("-NoProfile")
-                .arg("-ExecutionPolicy")
-                .arg("Bypass")
-                .arg("-WindowStyle")
-                .arg("Hidden")
-                .arg("-File")
-                .arg(&script_path)
-                .arg("-InstallerPath")
-                .arg(&installer_path);
-
-            #[cfg(target_os = "windows")]
-            powershell.creation_flags(0x08000000); // CREATE_NO_WINDOW
-
-            powershell.spawn()?;
+            Command::new(&installer_path).spawn()?;
 
             app.cleanup_before_exit();
             app.exit(0);
