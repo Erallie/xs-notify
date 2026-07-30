@@ -63,14 +63,21 @@ pub async fn fetch_latest<T: Into<String>>(current_version: T, app_name: T) -> R
                 let installer_link = response
                     .assets
                     .iter()
-                    .find(|asset| asset.name.ends_with("-setup.exe"))
+                    .find(|asset| {
+                        asset
+                            .name
+                            .to_ascii_lowercase()
+                            .ends_with("-setup.exe")
+                    })
                     .map(|asset| asset.browser_download_url.clone())
-                    .ok_or_else(|| {
-                        XSNotifyError::Custom(
-                            "No installer ending in '-setup.exe' was found in the latest release."
-                                .to_string(),
+                    .unwrap_or_else(|| {
+                        format!(
+                            "https://github.com/{}/{}/releases/download/v{}/installer-not-found",
+                            username,
+                            repository,
+                            latest
                         )
-                    })?;
+                    });
                 log::info!(
                     "Current version: {}\n\nA NEW VERSION is available: {}\nCtrl + click the following link to download it: {}\n",
                     current_formatted,
